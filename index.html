@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1e293b">
+    <title>PRO.VI - Gestione e Rendicontazione Completa</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-custom { background-color: #1e293b; color: white; }
+        
+        .card-stat { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 12px 16px !important; }
+        .card-stat h6 { font-size: 0.8rem; letter-spacing: 0.5px; }
+        .card-stat h3 { font-size: 1.4rem; }
+        .card-stat i { font-size: 1.6rem !important; opacity: 0.6; }
+
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 24px; }
+        
+        .bg-ferie { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
+        .bg-malattia { background-color: #ffe5d0 !important; color: #843200 !important; font-weight: bold; }
+        .bg-recupero { background-color: #e2e3e5 !important; color: #41464b !important; font-weight: bold; }
+        
+        .badge-ferie { background-color: #d1e7dd; color: #0f5132; }
+        .badge-malattia { background-color: #ffe5d0; color: #843200; }
+        .badge-recupero-legenda { background-color: #e2e3e5; color: #41464b; }
+        .badge-recupero { font-size: 1.1rem; padding: 8px 16px; border-radius: 8px; }
+        
+        .nav-tabs .nav-link { font-size: 0.9rem; }
+        .input-finanziato { max-width: 250px; font-weight: bold; font-size: 1.1rem; }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body class="pb-10">
+
+<header class="sticky top-0 z-20 navbar-custom p-3 shadow flex justify-between items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+        <div>
+            <h1 class="font-bold text-lg mb-0"><i class="fa-solid fa-calculator me-2 text-warning"></i>PRO.VI</h1>
+            <p class="text-xs text-slate-300 mb-0">Gestione Finanziaria e Presenze</p>
+        </div>
+        <div class="ms-3">
+            <select id="globalYearSelect" class="form-select form-select-sm fw-bold bg-dark text-white border-secondary" onchange="changeActiveYear(this.value)">
+                <option value="2026-2027">PRO.VI 2026-2027</option>
+                <option value="2027-2028">PRO.VI 2027-2028</option>
+                <option value="2028-2029">PRO.VI 2028-2029</option>
+                <option value="2029-2030">PRO.VI 2029-2030</option>
+            </select>
+        </div>
+    </div>
+    <div class="flex flex-wrap justify-end items-center gap-1.5">
+        <button type="button" onclick="googleSignIn()" id="googleSignInBtn" class="rounded-lg bg-white text-slate-900 border px-2.5 py-1.5 text-xs font-semibold shadow-sm">Accedi con Google</button>
+        <button onclick="exportData()" class="rounded-lg bg-white/20 border border-white/40 px-2.5 py-1.5 text-xs font-bold text-black bg-white">Backup Locale</button>
+        <button onclick="document.getElementById('importFile').click()" class="rounded-lg bg-white/20 border border-white/40 px-2.5 py-1.5 text-xs font-bold text-black bg-white">Importa</button>
+        <input id="importFile" type="file" accept=".json,application/json" class="hide" onchange="importData(event)">
+        <button onclick="googleSignOut()" id="googleSignOutBtn" class="hide rounded-lg bg-red-600 text-white px-2.5 py-1.5 text-xs font-semibold">Esci</button>
+    </div>
+</header>
+
+<div class="container-fluid px-4 mt-4">
+
+    <!-- DASHBOARD KPI COMPATTE -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card card-stat bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Finanziamento Iniziale</h6>
+                        <h3 class="fw-bold mb-0">€ <span id="kpi-budget">15000.00</span></h3>
+                    </div>
+                    <i class="fa-solid fa-piggy-bank"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat bg-danger text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Totale Spese Inserite</h6>
+                        <h3 class="fw-bold mb-0">€ <span id="kpi-totspese">0.00</span></h3>
+                    </div>
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Residuo Progetto</h6>
+                        <h3 class="fw-bold mb-0">€ <span id="kpi-residuo">0.00</span></h3>
+                    </div>
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-stat bg-dark text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Totale Disponibilità Conti</h6>
+                        <h3 class="fw-bold mb-0">€ <span id="kpi-totconti">0.00</span></h3>
+                    </div>
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCHEDE DI NAVIGAZIONE (TABS) -->
+    <ul class="nav nav-tabs mb-4 flex-wrap" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="spese-tab" data-bs-toggle="tab" data-bs-target="#spese-pane" type="button" role="tab"><i class="fa-solid fa-file-invoice-dollar me-1"></i>Rendicontazione Spese</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="preventivi-tab" data-bs-toggle="tab" data-bs-target="#preventivi-pane" type="button" role="tab"><i class="fa-solid fa-table-list me-1"></i>Preventivi & Spese Reali</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="domotica-tab" data-bs-toggle="tab" data-bs-target="#domotica-pane" type="button" role="tab"><i class="fa-solid fa-microchip me-1"></i>Domotica & Informatica</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="percentuali-tab" data-bs-toggle="tab" data-bs-target="#percentuali-pane" type="button" role="tab"><i class="fa-solid fa-percent me-1"></i>Percentuali e Prospetti</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="conti-tab" data-bs-toggle="tab" data-bs-target="#conti-pane" type="button" role="tab"><i class="fa-solid fa-building-columns me-1"></i>Conti e Saldi Bancari</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="lavoro-tab" data-bs-toggle="tab" data-bs-target="#lavoro-pane" type="button" role="tab"><i class="fa-solid fa-calendar-days me-1"></i>Giornate di Lavoro</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-success" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-pane" type="button" role="tab"><i class="fa-solid fa-cloud me-1"></i>Google Drive & Backup</button>
+        </li>
+    </ul>
+
+    <!-- CONTENUTO DELLE SCHEDE -->
+    <div class="tab-content" id="myTabContent">
+        
+        <!-- SCHEDA 1: RENDICONTAZIONE SPESE -->
+        <div class="tab-pane fade show active" id="spese-pane" role="tabpanel">
+            <div class="table-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Rendicontazione Spese Progetto</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="fa-solid fa-plus me-1"></i>Nuova Spesa</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Data</th>
+                                <th>Tipo Spesa / Descrizione</th>
+                                <th class="text-end">Importo (€)</th>
+                                <th class="text-center">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spese-tbody"></tbody>
+                        <tfoot class="table-secondary fw-bold">
+                            <tr>
+                                <td colspan="3" class="text-end">TOTALE SPESE:</td>
+                                <td class="text-end text-danger fs-5" id="tot-spese-td">€ 0.00</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">RESIDUO PROGETTO (15.000 € - Totale Spese):</td>
+                                <td class="text-end text-success fs-5" id="residuo-td">€ 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA 2: PREVENTIVI & SPESE REALI -->
+        <div class="tab-pane fade" id="preventivi-pane" role="tabpanel">
+            <div class="table-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-table-list text-primary me-2"></i>Preventivo Spese Progetto & Reale</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPreventivoModal"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Preventivo Spese Progetto</th>
+                                <th class="text-end" style="width: 160px;">Importo Preventivo (€)</th>
+                                <th class="text-end" style="width: 160px;">Spesa Reale (€)</th>
+                                <th class="text-center" style="width: 80px;">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preventivi-tbody"></tbody>
+                        <tfoot class="table-secondary fw-bold">
+                            <tr>
+                                <td>TOTALE:</td>
+                                <td class="text-end" id="tot-prev-td">€ 0.00</td>
+                                <td class="text-end text-danger" id="tot-reale-td">€ 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA 3: DOMOTICA & INFORMATICA -->
+        <div class="tab-pane fade" id="domotica-pane" role="tabpanel">
+            <div class="table-container">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-microchip text-primary me-2"></i>Domotica & Informatica</h4>
+                        <span class="text-muted">Inserisci le opzioni, modifica i costi e calcola residui in tempo reale.</span>
+                    </div>
+                    <div class="d-flex align-items-center bg-light p-2 rounded border">
+                        <label class="form-label fw-bold text-primary mb-0 me-2"><i class="fa-solid fa-coins me-1"></i>Importo Finanziato (€):</label>
+                        <input type="number" step="0.01" id="domoticaFinanziatoInput" class="form-control input-finanziato text-end" value="4400.00" oninput="updateDomoticaFinanziato(this.value)">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Opzione / Smart Oggetto</th>
+                                <th class="text-end" style="width: 200px;">Costo / Importo (€)</th>
+                                <th class="text-center" style="width: 80px;">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="domotica-tbody"></tbody>
+                        <tfoot class="table-secondary fw-bold">
+                            <tr>
+                                <td class="text-end">TOTALE SCELTE:</td>
+                                <td class="text-end text-primary fs-5" id="domotica-tot-td">€ 0.00</td>
+                                <td></td>
+                            </tr>
+                            <tr class="table-info">
+                                <td class="text-end">RESIDUO (Finanziato - Scelte):</td>
+                                <td class="text-end text-success fs-5" id="domotica-residuo-td">€ 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <button class="btn btn-outline-primary btn-sm mt-2" onclick="addDomoticaRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga Opzione Domotica</button>
+            </div>
+        </div>
+
+        <!-- SCHEDA 4: PERCENTUALI E PROSPETTI -->
+        <div class="tab-pane fade" id="percentuali-pane" role="tabpanel">
+            <div class="table-container">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-percent text-primary me-2"></i>Percentuali e Prospetti di Spesa</h4>
+                        <span class="text-muted">Formula automatica: Preventivo = Budget × % Inserita</span>
+                    </div>
+                    <div class="d-flex align-items-center bg-light p-2 rounded border">
+                        <label class="form-label fw-bold text-primary mb-0 me-2"><i class="fa-solid fa-wallet me-1"></i>Budget Iniziale (€):</label>
+                        <input type="number" step="0.01" id="percBudgetInput" class="form-control input-finanziato text-end" value="15000.00" oninput="updateBudgetIniziale(this.value)">
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- PROSPETTO 1 -->
+                    <div class="col-lg-6">
+                        <div class="card p-3 border">
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-list-check text-success me-2"></i>PROSPETTO 1</h5>
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Voce</th>
+                                        <th style="width: 100px;" class="text-center">%</th>
+                                        <th style="width: 140px;" class="text-end">Preventivo (€)</th>
+                                        <th style="width: 140px;" class="text-end">Reale (€)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p1-tbody"></tbody>
+                                <tfoot class="table-secondary fw-bold">
+                                    <tr>
+                                        <td>TOTALE:</td>
+                                        <td class="text-center" id="p1-tot-perc">0%</td>
+                                        <td class="text-end" id="p1-tot-prev">€ 0.00</td>
+                                        <td class="text-end text-danger" id="p1-tot-real">€ 0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addProspettoRow('prospetto1')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P1</button>
+                        </div>
+                    </div>
+
+                    <!-- PROSPETTO 16 ORE -->
+                    <div class="col-lg-6">
+                        <div class="card p-3 border">
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-clock text-warning me-2"></i>PROSPETTO 16 ORE</h5>
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Voce</th>
+                                        <th style="width: 100px;" class="text-center">%</th>
+                                        <th style="width: 140px;" class="text-end">Preventivo (€)</th>
+                                        <th style="width: 140px;" class="text-end">Reale (€)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="p16-tbody"></tbody>
+                                <tfoot class="table-secondary fw-bold">
+                                    <tr>
+                                        <td>TOTALE:</td>
+                                        <td class="text-center" id="p16-tot-perc">0%</td>
+                                        <td class="text-end" id="p16-tot-prev">€ 0.00</td>
+                                        <td class="text-end text-danger" id="p16-tot-real">€ 0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addProspettoRow('prospetto16')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P16</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA 5: CONTI E SALDI BANCARI -->
+        <div class="tab-pane fade" id="conti-pane" role="tabpanel">
+            <div class="table-container">
+                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-building-columns text-secondary me-2"></i>Conti e Saldi Bancari</h4>
+                <p class="text-muted">Il <strong>Conto Ale</strong> rappresenta il totale bancario lordo. Da esso viene sottratto automaticamente il <em>Residuo Progetto</em> per ottenere il <strong>Saldo Banca</strong> effettivo, a cui si sommano le altre voci.</p>
+                
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Voce / Conto</th>
+                                        <th style="width: 160px;" class="text-end">Importo (€)</th>
+                                        <th class="text-center" style="width: 80px;">Azione</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="conti-tbody"></tbody>
+                                <tfoot class="table-light">
+                                    <tr class="table-warning">
+                                        <td class="fw-bold text-danger">Conto Ale Lordo:</td>
+                                        <td class="fw-bold text-end" id="conto-ale-lordo-td">€ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td class="fw-bold text-danger">- Meno Residuo Progetto:</td>
+                                        <td class="fw-bold text-end text-danger" id="detrazione-residuo-td">€ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <td class="fw-bold">= Saldo Banca (Conto Ale Netto):</td>
+                                        <td class="fw-bold text-end" id="saldo-banca-td">€ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td class="fw-bold fs-5">TOTALE COMPLESSIVO DISPONIBILE:</td>
+                                        <td class="fw-bold text-end text-success fs-5" id="totale-disponibile-td">€ 0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="addAccountRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce Conto</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA 6: GIORNATE DI LAVORO & REGISTRO PRESENZE -->
+        <div class="tab-pane fade" id="lavoro-pane" role="tabpanel">
+            <div class="table-container">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-calendar-days text-success me-2"></i>Giornate di Lavoro & Registro Presenze</h4>
+                        <span class="text-muted" id="lavoro-subtitle">Pianificazione presenze per l'anno selezionato</span>
+                    </div>
+                    <div class="d-flex gap-3 align-items-center mt-2 mt-md-0">
+                        <span class="badge bg-success badge-recupero"><i class="fa-solid fa-clock-rotate-left me-1"></i>Contatore Ore da Recuperare: <strong id="contatore-recupero">12</strong> ore</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mb-3">
+                    <span class="badge badge-ferie p-2 border fw-bold">Ferie</span>
+                    <span class="badge badge-malattia p-2 border fw-bold">Malattia</span>
+                    <span class="badge badge-recupero-legenda p-2 border fw-bold">Recupero</span>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Seleziona Mese da Visualizzare:</label>
+                        <select id="monthSelect" class="form-select fw-bold" onchange="renderMonthCalendar()"></select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 120px;">Data</th>
+                                <th style="width: 120px;">Giorno</th>
+                                <th style="width: 100px;">Ore Lav.</th>
+                                <th style="width: 180px;">Stato / Categoria</th>
+                                <th>Note / Descrizione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-tbody"></tbody>
+                        <tfoot class="table-secondary fw-bold">
+                            <tr>
+                                <td colspan="2" class="text-end">TOTALE ORE LAVORATE MESE:</td>
+                                <td class="text-center fs-5 text-primary" id="tot-ore-mese">0</td>
+                                <td colspan="2" id="sommario-mese-note"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDA 7: GOOGLE DRIVE & CLOUD SYNC -->
+        <div class="tab-pane fade" id="cloud-pane" role="tabpanel">
+            <div class="table-container max-w-2xl">
+                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cloud text-success me-2"></i>Sincronizzazione Google Drive</h4>
+                <p class="text-sm text-slate-600">Accedi con il tuo account Google per sincronizzare tutti i dati dell'app (spese, preventivi, domotica, presenze) su tutti i tuoi dispositivi in modo sicuro e privato (`appDataFolder`).</p>
+                
+                <div id="configFields" class="mb-3">
+                    <div id="configNotice" class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900 mb-2"><b>Configurazione necessaria:</b> inserisci il Client ID OAuth creato nel progetto Google Cloud, poi premi Salva configurazione e Accedi.</div>
+                    <label class="form-label fw-semibold">Google OAuth Client ID</label>
+                    <input id="clientId" autocomplete="off" placeholder="123456789-abc....apps.googleusercontent.com" class="form-control mb-2">
+                    <button type="button" onclick="saveGoogleConfig()" class="btn btn-dark btn-sm">Salva configurazione</button>
+                </div>
+                <div id="configSaved" class="hide rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 mb-3">Client ID configurato in questo dispositivo.</div>
+                
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" onclick="editGoogleConfig()" id="editConfigBtn" class="hide btn btn-outline-secondary btn-sm">Modifica Client ID</button>
+                </div>
+
+                <p id="googleStatus" role="status" class="text-sm text-slate-600 fw-bold mb-3">Non collegato a Google Drive.</p>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6"><button onclick="driveBackup()" class="btn btn-success w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Backup su Drive</button></div>
+                    <div class="col-sm-6"><button onclick="driveRestore()" class="btn btn-outline-success w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-down me-1"></i>Ripristina da Drive</button></div>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input id="autoSync" type="checkbox" checked class="form-check-input" onchange="saveAutoSync()">
+                    <label class="form-check-label text-sm text-slate-600" for="autoSync">Sincronizza automaticamente ogni 5 secondi mentre l'app è aperta.</label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODALI -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i>Aggiungi Spesa Progetto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm">
+                    <div class="mb-3"><label class="form-label fw-bold">Data Spesa</label><input type="date" id="expDate" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Tipo Spesa / Descrizione</label><input type="text" id="expType" class="form-control" placeholder="Es. Busta paga ottobre, Contributi..." required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Importo (€)</label><input type="number" step="0.01" id="expAmount" class="form-control" placeholder="0.00" required></div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-save me-1"></i>Salva Spesa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addPreventivoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i>Aggiungi Voce Preventivo/Reale</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="preventivoForm">
+                    <div class="mb-3"><label class="form-label fw-bold">Descrizione Voce</label><input type="text" id="prevDesc" class="form-control" placeholder="Es. Monitor, Consulenza..." required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Importo Preventivo (€)</label><input type="number" step="0.01" id="prevAmount" class="form-control" placeholder="0.00" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Spesa Reale (€)</label><input type="number" step="0.01" id="prevRealAmount" class="form-control" placeholder="0.00" required></div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-save me-1"></i>Salva Voce</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentYearKey = "2026-2027";
+    let allYearsData = {};
+
+    function getDefaultYearData() {
+        return {
+            budgetIniziale: 15000.00,
+            domoticaFinanziato: 4400.00,
+            spese: [
+                { id: 1, date: "2026-03-02", type: "fideiussione", amount: 520.00 },
+                { id: 2, date: "2026-03-05", type: "serrature", amount: 720.00 },
+                { id: 3, date: "2026-03-11", type: "pc", amount: 2307.00 },
+                { id: 4, date: "2026-03-12", type: "MONITOR", amount: 249.63 },
+                { id: 5, date: "2026-03-12", type: "MOUSE", amount: 32.39 }
+            ],
+            preventivi: [
+                { id: 1, desc: "PC", prev: 2307.70, real: 2307.70 },
+                { id: 2, desc: "MONITOR", prev: 249.63, real: 249.63 },
+                { id: 3, desc: "MOUSE", prev: 32.39, real: 32.39 },
+                { id: 4, desc: "serratura", prev: 720.00, real: 720.00 },
+                { id: 5, desc: "Domos", prev: 900.00, real: 899.99 },
+                { id: 6, desc: "Contratto Collaboratore", prev: 9000.00, real: 0.00, isContract: true },
+                { id: 7, desc: "Avvio rapporto lavoro - Elaborazione cedolini", prev: 0.00, real: 0.00 },
+                { id: 8, desc: "apertura polizza fideiussoria + notaio", prev: 520.00, real: 520.00 }
+            ],
+            domoticaItems: [
+                { name: "spioncino smarth", amount: 139.93 },
+                { name: "Cellulare", amount: 0.00 },
+                { name: "Cronotermostato Smart", amount: 170.00 },
+                { name: "Robot lavapavimenti", amount: 0.00 },
+                { name: "rete elettica", amount: 1352.00 },
+                { name: "Smartwatch", amount: 150.00 },
+                { name: "alexa echo dot", amount: 139.96 },
+                { name: "IMPIANTO HOME SMART", amount: 960.00 }
+            ],
+            prospetto1: [
+                { desc: "Contratto", perc: 60, real: 9713.46 },
+                { desc: "Consulente", perc: 3, real: 410.00 },
+                { desc: "Domos", perc: 7, real: 1000.00 },
+                { desc: "Ausili tecnici-informatici", perc: 30, real: 3893.00 },
+                { desc: "Fideiussione", perc: 0, real: 400.00 }
+            ],
+            prospetto16: [
+                { desc: "Contratto", perc: 70, real: 9713.46 },
+                { desc: "Consulente", perc: 3, real: 410.00 },
+                { desc: "Domos", perc: 7, real: 950.00 },
+                { desc: "Ausili tecnici-informatici", perc: 20, real: 3575.82 },
+                { desc: "Fideiussione", perc: 0, real: 400.00 }
+            ],
+            contiBancari: [
+                { name: "Conto Ale (Totale Banca)", amount: 5689.07, isContoAle: true },
+                { name: "saldo banca", amount: 369.01 },
+                { name: "Conto Raffa", amount: 127.63 },
+                { name: "roborock", amount: 449.00 },
+                { name: "libretto", amount: 339.31 }
+            ],
+            calendarData: {}
+        };
+    }
+
+    let tokenClient = null, accessToken = null, driveFileId = null, syncTimer = null, pollTimer = null, lastCloudModified = "", syncBusy = false, lastLocalEdit = 0;
+
+    function getActiveData() {
+        if (!allYearsData[currentYearKey]) {
+            allYearsData[currentYearKey] = getDefaultYearData();
+        }
+        return allYearsData[currentYearKey];
+    }
+
+    function getYearMonths(yearKey) {
+        let startYear = parseInt(yearKey.split("-")[0]);
+        return [
+            { label: `Aprile ${startYear}`, year: startYear, month: 3 },
+            { label: `Maggio ${startYear}`, year: startYear, month: 4 },
+            { label: `Giugno ${startYear}`, year: startYear, month: 5 },
+            { label: `Luglio ${startYear}`, year: startYear, month: 6 },
+            { label: `Agosto ${startYear}`, year: startYear, month: 7 },
+            { label: `Settembre ${startYear}`, year: startYear, month: 8 },
+            { label: `Ottobre ${startYear}`, year: startYear, month: 9 },
+            { label: `Novembre ${startYear}`, year: startYear, month: 10 },
+            { label: `Dicembre ${startYear}`, year: startYear, month: 11 },
+            { label: `Gennaio ${startYear+1}`, year: startYear+1, month: 0 },
+            { label: `Febbraio ${startYear+1}`, year: startYear+1, month: 1 },
+            { label: `Marzo ${startYear+1}`, year: startYear+1, month: 2 },
+            { label: `Aprile ${startYear+1}`, year: startYear+1, month: 3 }
+        ];
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadLocalData();
+        initMonthSelect();
+        renderAll();
+        
+        let savedId = localStorage.getItem("provi_google_client_id") || "";
+        if(savedId) {
+            document.getElementById("clientId").value = savedId;
+            showSavedGoogleConfig();
+            loadGoogleLibrary().then(() => {
+                if(initGoogle()) restoreGoogleSession();
+            }).catch(()=>{});
+        }
+    });
+
+    function changeActiveYear(year) {
+        currentYearKey = year;
+        initMonthSelect();
+        renderAll();
+    }
+
+    function renderAll() {
+        let d = getActiveData();
+        document.getElementById("percBudgetInput").value = d.budgetIniziale;
+        document.getElementById("domoticaFinanziatoInput").value = d.domoticaFinanziato;
+        document.getElementById("globalYearSelect").value = currentYearKey;
+        document.getElementById("lavoro-subtitle").innerText = `Pianificazione presenze per l'anno ${currentYearKey}`;
+        renderSpese();
+        renderDomotica();
+        renderPercentuali();
+        renderConti();
+        renderMonthCalendar();
+    }
+
+    // --- PERSISTENZA E LOCAL STORAGE ---
+    function persistData() {
+        let stateObj = { format: "provi-multi-year", version: 2, allYearsData };
+        localStorage.setItem("provi_multi_state", JSON.stringify(stateObj));
+        lastLocalEdit = Date.now();
+        localStorage.setItem("provi_local_edit", String(lastLocalEdit));
+        if(accessToken) scheduleSync();
+    }
+
+    function loadLocalData() {
+        try {
+            let raw = localStorage.getItem("provi_multi_state");
+            if(raw) {
+                let parsed = JSON.parse(raw);
+                if(parsed.allYearsData) allYearsData = parsed.allYearsData;
+            } else {
+                // Backward compatibility with older single-year state
+                let oldRaw = localStorage.getItem("provi_app_state");
+                if(oldRaw) {
+                    let d = JSON.parse(oldRaw);
+                    allYearsData["2026-2027"] = {
+                        budgetIniziale: 15000.00,
+                        domoticaFinanziato: 4400.00,
+                        spese: d.spese || [],
+                        preventivi: d.preventivi || [],
+                        domoticaItems: d.domoticaItems || [],
+                        prospetto1: d.prospetto1 || [],
+                        prospetto16: d.prospetto16 || [],
+                        contiBancari: d.contiBancari || [],
+                        calendarData: d.calendarData || {}
+                    };
+                }
+            }
+        } catch(e) {}
+        lastLocalEdit = Number(localStorage.getItem("provi_local_edit") || 0);
+        let savedId = localStorage.getItem("provi_google_client_id") || "";
+        document.getElementById("clientId").value = savedId;
+        document.getElementById("configNotice").classList.toggle("hide", !!savedId);
+        document.getElementById("autoSync").checked = localStorage.getItem("provi_auto_sync") !== "false";
+    }
+
+    // --- LOCAL BACKUP & IMPORT ---
+    function exportData() {
+        let appState = { format: "provi-multi-year", version: 2, exportedAt: new Date().toISOString(), allYearsData };
+        const blob = new Blob([JSON.stringify(appState, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_provi_completo_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function importData(e) {
+        let f = e.target.files?.[0];
+        if(!f) return;
+        let r = new FileReader();
+        r.onload = () => {
+            try {
+                let d = JSON.parse(r.result);
+                if(!d || typeof d !== "object") throw Error();
+                if(!confirm("Importare il backup? I dati attuali verranno sostituiti.")) return;
+                if(d.allYearsData) {
+                    allYearsData = d.allYearsData;
+                } else if(d.spese) {
+                    // Single year backup format
+                    allYearsData[currentYearKey] = {
+                        budgetIniziale: 15000.00,
+                        domoticaFinanziato: 4400.00,
+                        spese: d.spese || [],
+                        preventivi: d.preventivi || [],
+                        domoticaItems: d.domoticaItems || [],
+                        prospetto1: d.prospetto1 || [],
+                        prospetto16: d.prospetto16 || [],
+                        contiBancari: d.contiBancari || [],
+                        calendarData: d.calendarData || {}
+                    };
+                }
+                persistData();
+                renderAll();
+                alert("Backup importato con successo!");
+            } catch(err) {
+                alert("File di backup non valido.");
+            } finally {
+                document.getElementById("importFile").value = "";
+            }
+        };
+        r.readAsText(f);
+    }
+
+    // --- GOOGLE DRIVE SYNC & OAUTH ---
+    function showSavedGoogleConfig() {
+        document.getElementById("configFields").classList.add("hide");
+        document.getElementById("configSaved").classList.remove("hide");
+        document.getElementById("editConfigBtn").classList.remove("hide");
+    }
+
+    function editGoogleConfig() {
+        document.getElementById("configFields").classList.remove("hide");
+        document.getElementById("configSaved").classList.add("hide");
+        document.getElementById("editConfigBtn").classList.add("hide");
+        document.getElementById("clientId").value = localStorage.getItem("provi_google_client_id") || "";
+    }
+
+    function saveGoogleConfig() {
+        let id = document.getElementById("clientId").value.trim();
+        if(!id) {
+            localStorage.removeItem("provi_google_client_id");
+            document.getElementById("configNotice").classList.remove("hide");
+            document.getElementById("googleStatus").textContent = "Inserisci il Client ID OAuth.";
+            return;
+        }
+        localStorage.setItem("provi_google_client_id", id);
+        document.getElementById("configNotice").classList.add("hide");
+        document.getElementById("googleStatus").textContent = "Configurazione salvata. Inizializzazione Google…";
+        loadGoogleLibrary().then(() => {
+            if(initGoogle() && tokenClient) {
+                showSavedGoogleConfig();
+                document.getElementById("googleStatus").textContent = "Pronto. Premi «Accedi con Google».";
+            }
+        }).catch(e => {
+            document.getElementById("googleStatus").textContent = "Errore caricamento Google: " + e.message;
+        });
+    }
+
+    function saveAutoSync() {
+        localStorage.setItem("provi_auto_sync", document.getElementById("autoSync").checked ? "true" : "false");
+        if(accessToken) scheduleSync();
+    }
+
+    function loadGoogleLibrary() {
+        return new Promise((resolve, reject) => {
+            if(window.google?.accounts?.oauth2) { resolve(); return; }
+            let existing = document.querySelector('script[data-google-gis="1"]');
+            if(!existing) {
+                existing = document.createElement("script");
+                existing.src = "https://accounts.google.com/gsi/client";
+                existing.async = true;
+                existing.dataset.googleGis = "1";
+                document.head.appendChild(existing);
+            }
+            existing.onload = () => window.google?.accounts?.oauth2 ? resolve() : reject(Error("GIS non disponibile"));
+            existing.onerror = () => reject(Error("Impossibile caricare libreria Google"));
+            setTimeout(() => reject(Error("Timeout caricamento Google")), 8000);
+        });
+    }
+
+    function setGoogleConnectedUI(connected) {
+        if(connected) {
+            document.getElementById("googleSignInBtn").classList.add("hide");
+            document.getElementById("googleSignOutBtn").classList.remove("hide");
+            document.getElementById("editConfigBtn").classList.add("hide");
+        } else {
+            document.getElementById("googleSignInBtn").classList.remove("hide");
+            document.getElementById("googleSignOutBtn").classList.add("hide");
+            if(localStorage.getItem("provi_google_client_id")) document.getElementById("editConfigBtn").classList.remove("hide");
+        }
+    }
+
+    function initGoogle() {
+        let id = localStorage.getItem("provi_google_client_id");
+        if(!id) return false;
+        try {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: id,
+                scope: "https://www.googleapis.com/auth/drive.appdata",
+                callback: async response => {
+                    if(response.error) {
+                        accessToken = null;
+                        setGoogleConnectedUI(false);
+                        document.getElementById("googleStatus").textContent = "Accesso non riuscito. Premi Accedi con Google.";
+                        return;
+                    }
+                    accessToken = response.access_token;
+                    setGoogleConnectedUI(true);
+                    document.getElementById("googleStatus").textContent = "Account Google collegato. Sincronizzazione in corso…";
+                    await startLiveSync();
+                }
+            });
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    function restoreGoogleSession() {
+        if(!localStorage.getItem("provi_google_client_id")) return;
+        if(!tokenClient && !initGoogle()) return;
+        try { tokenClient.requestAccessToken({ prompt: "none" }); } catch(e) { setGoogleConnectedUI(false); }
+    }
+
+    async function googleSignIn() {
+        let id = document.getElementById("clientId").value.trim() || localStorage.getItem("provi_google_client_id") || "";
+        if(!id) {
+            alert("Inserisci prima il Client ID OAuth.");
+            return;
+        }
+        localStorage.setItem("provi_google_client_id", id);
+        showSavedGoogleConfig();
+        await loadGoogleLibrary();
+        if(!initGoogle()) { alert("Errore inizializzazione Google Client."); return; }
+        tokenClient.requestAccessToken();
+    }
+
+    function googleSignOut() {
+        if(pollTimer) clearInterval(pollTimer);
+        pollTimer = null;
+        if(syncTimer) clearTimeout(syncTimer);
+        syncTimer = null;
+        if(accessToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(accessToken, ()=>{});
+        accessToken = null;
+        tokenClient = null;
+        setGoogleConnectedUI(false);
+        document.getElementById("googleStatus").textContent = "Disconnesso da Google Drive.";
+    }
+
+    async function api(url, options = {}) {
+        if(!accessToken) throw Error("Non connesso a Google.");
+        let r = await fetch(url, { ...options, headers: { Authorization: "Bearer " + accessToken, ...(options.headers || {}) } });
+        if(r.status === 401) { accessToken = null; throw Error("Sessione Google scaduta."); }
+        if(!r.ok) throw Error("Errore Google Drive (" + r.status + ")");
+        return r.status === 204 ? null : r.json();
+    }
+
+    async function findDriveFile() {
+        let q = encodeURIComponent("name='provi-multi-year-backup.json' and 'appDataFolder' in parents and trashed=false");
+        let x = await api("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=" + q + "&fields=files(id,name,modifiedTime)");
+        return x.files?.[0] || null;
+    }
+
+    async function driveBackup(silent = false) {
+        try {
+            if(!accessToken) throw Error("Accedi prima a Google.");
+            if(syncBusy) return;
+            syncBusy = true;
+            if(!silent) document.getElementById("googleStatus").textContent = "Backup su Drive in corso…";
+            
+            let file = await findDriveFile();
+            let stamp = new Date().toISOString();
+            let content = JSON.stringify({ format: "provi-multi-year", version: 2, updatedAt: stamp, allYearsData });
+            let boundary = "provi_boundary_" + Date.now();
+            let meta = { name: "provi-multi-year-backup.json", mimeType: "application/json", ...(file ? {} : { parents: ["appDataFolder"] }) };
+            let url = file ? `https://www.googleapis.com/upload/drive/v3/files/${file.id}?uploadType=multipart` : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+            
+            let resp = await fetch(url, {
+                method: file ? "PATCH" : "POST",
+                headers: { Authorization: "Bearer " + accessToken, "Content-Type": "multipart/related; boundary=" + boundary },
+                body: `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`
+            });
+            if(!resp.ok) throw Error("Backup fallito.");
+            let result = await resp.json();
+            driveFileId = result.id;
+            let fresh = await findDriveFile();
+            lastCloudModified = fresh?.modifiedTime || stamp;
+            if(!silent) document.getElementById("googleStatus").textContent = "Backup su Drive completato con successo!";
+        } catch(e) {
+            if(!silent) document.getElementById("googleStatus").textContent = e.message;
+        } finally {
+            syncBusy = false;
+        }
+    }
+
+    async function readCloud() {
+        let file = await findDriveFile();
+        if(!file) return null;
+        if(file.modifiedTime && file.modifiedTime === lastCloudModified) return null;
+        let data = await api("https://www.googleapis.com/drive/v3/files/" + file.id + "?alt=media");
+        return { file, data };
+    }
+
+    async function applyCloud(data, file, quiet = false) {
+        if(data.allYearsData) {
+            allYearsData = data.allYearsData;
+        } else if(data.spese) {
+            allYearsData["2026-2027"] = {
+                budgetIniziale: 15000.00,
+                domoticaFinanziato: 4400.00,
+                spese: data.spese || [],
+                preventivi: data.preventivi || [],
+                domoticaItems: data.domoticaItems || [],
+                prospetto1: data.prospetto1 || [],
+                prospetto16: data.prospetto16 || [],
+                contiBancari: data.contiBancari || [],
+                calendarData: data.calendarData || {}
+            };
+        }
+        persistData();
+        renderAll();
+        lastCloudModified = file.modifiedTime || data.updatedAt || "";
+        if(!quiet) document.getElementById("googleStatus").textContent = "Ripristino da Drive completato.";
+    }
+
+    async function driveRestore() {
+        try {
+            if(!accessToken) throw Error("Accedi prima a Google.");
+            document.getElementById("googleStatus").textContent = "Ricerca backup su Drive…";
+            let file = await findDriveFile();
+            if(!file) throw Error("Nessun backup trovato su Google Drive.");
+            let data = await api("https://www.googleapis.com/drive/v3/files/" + file.id + "?alt=media");
+            if(!confirm("Vuoi ripristinare i dati da Google Drive? I dati locali verranno sovrascritti.")) return;
+            await applyCloud(data, file);
+        } catch(e) {
+            document.getElementById("googleStatus").textContent = e.message;
+        }
+    }
+
+    async function syncFromCloud() {
+        if(!accessToken || syncBusy || document.hidden) return;
+        try {
+            let res = await readCloud();
+            if(!res) return;
+            let cloudTime = Date.parse(res.data.updatedAt || res.file.modifiedTime || 0);
+            if(lastLocalEdit && lastLocalEdit > cloudTime) { scheduleSync(); return; }
+            await applyCloud(res.data, res.file, true);
+        } catch(e) {}
+    }
+
+    async function startLiveSync() {
+        if(!accessToken) return;
+        if(pollTimer) clearInterval(pollTimer);
+        try {
+            let file = await findDriveFile();
+            if(file) {
+                let data = await api("https://www.googleapis.com/drive/v3/files/" + file.id + "?alt=media");
+                await applyCloud(data, file, true);
+            } else {
+                await driveBackup(true);
+            }
+        } catch(e) {}
+        if(document.getElementById("autoSync").checked) pollTimer = setInterval(syncFromCloud, 5000);
+    }
+
+    function scheduleSync() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => driveBackup(true), 1200);
+    }
+
+    // --- LOGICA APPLICATIVA ---
+    function updateBudgetIniziale(val) {
+        let d = getActiveData();
+        d.budgetIniziale = parseFloat(val) || 0;
+        renderSpese();
+        renderPercentuali();
+        renderConti();
+    }
+
+    function updateDomoticaFinanziato(val) {
+        let d = getActiveData();
+        d.domoticaFinanziato = parseFloat(val) || 0;
+        renderDomotica();
+    }
+
+    function calcolaTotaleBusteEContributi() {
+        let d = getActiveData();
+        return d.spese.filter(s => s.type.toLowerCase().includes("busta") || s.type.toLowerCase().includes("contributi")).reduce((sum, s) => sum + s.amount, 0);
+    }
+
+    function renderSpese() {
+        let d = getActiveData();
+        const tbody = document.getElementById("spese-tbody");
+        tbody.innerHTML = "";
+        let totSpese = 0;
+
+        d.spese.forEach((item, index) => {
+            totSpese += item.amount;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.date}</td>
+                    <td>${item.type}</td>
+                    <td class="text-end fw-bold">€ ${item.amount.toFixed(2)}</td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+        });
+
+        const residuo = d.budgetIniziale - totSpese;
+        document.getElementById("tot-spese-td").innerText = "€ " + totSpese.toFixed(2);
+        document.getElementById("residuo-td").innerText = "€ " + residuo.toFixed(2);
+        document.getElementById("kpi-budget").innerText = d.budgetIniziale.toFixed(2);
+        document.getElementById("kpi-totspese").innerText = totSpese.toFixed(2);
+        document.getElementById("kpi-residuo").innerText = residuo.toFixed(2);
+
+        let contract = d.preventivi.find(p => p.isContract);
+        if (contract) contract.real = calcolaTotaleBusteEContributi();
+
+        renderPreventivi();
+        renderConti();
+        persistData();
+    }
+
+    document.getElementById("expenseForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        let d = getActiveData();
+        const date = document.getElementById("expDate").value;
+        const type = document.getElementById("expType").value;
+        const amount = parseFloat(document.getElementById("expAmount").value);
+        if (date && type && !isNaN(amount)) {
+            d.spese.push({ id: Date.now(), date: date, type: type, amount: amount });
+            renderSpese();
+            this.reset();
+            bootstrap.Modal.getInstance(document.getElementById("addExpenseModal")).hide();
+        }
+    });
+
+    function deleteExpense(id) {
+        let d = getActiveData();
+        d.spese = d.spese.filter(s => s.id !== id);
+        renderSpese();
+    }
+
+    function renderPreventivi() {
+        let d = getActiveData();
+        const tbody = document.getElementById("preventivi-tbody");
+        tbody.innerHTML = "";
+        let totPrev = 0, totReale = 0;
+
+        d.preventivi.forEach((item, index) => {
+            totPrev += item.prev;
+            totReale += item.real;
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.desc}" onchange="getActiveData().preventivi[${index}].desc = this.value; renderPreventivi();"></td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm text-end" value="${item.prev.toFixed(2)}" onchange="getActiveData().preventivi[${index}].prev = parseFloat(this.value)||0; renderPreventivi();"></td>
+                    <td class="text-end fw-bold ${item.isContract ? 'text-primary' : ''}"><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.real.toFixed(2)}" ${item.isContract ? 'readonly' : ''} onchange="getActiveData().preventivi[${index}].real = parseFloat(this.value)||0; renderPreventivi();"></td>
+                    <td class="text-center">${!item.isContract ? `<button class="btn btn-sm btn-outline-danger" onclick="deletePreventivo(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
+                </tr>`;
+        });
+
+        document.getElementById("tot-prev-td").innerText = "€ " + totPrev.toFixed(2);
+        document.getElementById("tot-reale-td").innerText = "€ " + totReale.toFixed(2);
+        persistData();
+    }
+
+    document.getElementById("preventivoForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        let d = getActiveData();
+        const desc = document.getElementById("prevDesc").value;
+        const prev = parseFloat(document.getElementById("prevAmount").value) || 0;
+        const real = parseFloat(document.getElementById("prevRealAmount").value) || 0;
+        if (desc) {
+            d.preventivi.push({ id: Date.now(), desc: desc, prev: prev, real: real, isContract: false });
+            renderPreventivi();
+            this.reset();
+            bootstrap.Modal.getInstance(document.getElementById("addPreventivoModal")).hide();
+        }
+    });
+
+    function deletePreventivo(id) {
+        let d = getActiveData();
+        d.preventivi = d.preventivi.filter(p => p.id !== id);
+        renderPreventivi();
+    }
+
+    function renderDomotica() {
+        let d = getActiveData();
+        const tbody = document.getElementById("domotica-tbody");
+        tbody.innerHTML = "";
+        let totScelte = 0;
+
+        d.domoticaItems.forEach((item, index) => {
+            totScelte += item.amount;
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().domoticaItems[${index}].name = this.value; renderDomotica();"></td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().domoticaItems[${index}].amount = parseFloat(this.value)||0; renderDomotica();"></td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteDomoticaRow(${index})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+        });
+
+        let residuo = d.domoticaFinanziato - totScelte;
+        document.getElementById("domotica-tot-td").innerText = "€ " + totScelte.toFixed(2);
+        document.getElementById("domotica-residuo-td").innerText = "€ " + residuo.toFixed(2);
+        persistData();
+    }
+
+    function addDomoticaRow() {
+        let d = getActiveData();
+        d.domoticaItems.push({ name: "Nuovo Oggetto Smart", amount: 0.00 });
+        renderDomotica();
+    }
+
+    function deleteDomoticaRow(index) {
+        let d = getActiveData();
+        d.domoticaItems.splice(index, 1);
+        renderDomotica();
+    }
+
+    function renderPercentuali() {
+        let d = getActiveData();
+
+        function populateTable(dataArray, tbodyId, percId, prevId, realId, propName) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = "";
+            let totPerc = 0, totPrev = 0, totReal = 0;
+
+            dataArray.forEach((item, index) => {
+                let calcPrev = d.budgetIniziale * (item.perc / 100);
+                totPerc += item.perc;
+                totPrev += calcPrev;
+                totReal += item.real;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.desc}" onchange="getActiveData().${propName}[${index}].desc = this.value; renderPercentuali();"></td>
+                        <td><input type="number" step="0.1" class="form-control form-control-sm text-center" value="${item.perc}" onchange="getActiveData().${propName}[${index}].perc = parseFloat(this.value)||0; renderPercentuali();"></td>
+                        <td class="text-end fw-bold">€ ${calcPrev.toFixed(2)}</td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end" value="${item.real.toFixed(2)}" onchange="getActiveData().${propName}[${index}].real = parseFloat(this.value)||0; renderPercentuali();"></td>
+                    </tr>`;
+            });
+
+            document.getElementById(percId).innerText = totPerc.toFixed(1) + "%";
+            document.getElementById(prevId).innerText = "€ " + totPrev.toFixed(2);
+            document.getElementById(realId).innerText = "€ " + totReal.toFixed(2);
+        }
+
+        populateTable(d.prospetto1, "p1-tbody", "p1-tot-perc", "p1-tot-prev", "p1-tot-real", "prospetto1");
+        populateTable(d.prospetto16, "p16-tbody", "p16-tot-perc", "p16-tot-prev", "p16-tot-real", "prospetto16");
+        persistData();
+    }
+
+    function addProspettoRow(propName) {
+        let d = getActiveData();
+        d[propName].push({ desc: "Nuova Voce", perc: 0, real: 0 });
+        renderPercentuali();
+    }
+
+    function renderConti() {
+        let d = getActiveData();
+        const tbody = document.getElementById("conti-tbody");
+        tbody.innerHTML = "";
+        let totAltreVoci = 0, contoAleLordo = 5689.07;
+
+        d.contiBancari.forEach((item, index) => {
+            if (item.isContoAle) contoAleLordo = item.amount;
+            else totAltreVoci += item.amount;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().contiBancari[${index}].name = this.value; renderConti();"></td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().contiBancari[${index}].amount = parseFloat(this.value)||0; renderConti();"></td>
+                    <td class="text-center">${!item.isContoAle ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${index})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
+                </tr>`;
+        });
+
+        const totSpese = d.spese.reduce((sum, s) => sum + s.amount, 0);
+        const residuoProgetto = d.budgetIniziale - totSpese;
+        let saldoBanca = contoAleLordo - residuoProgetto;
+        let totaleComplessivoDisponibile = saldoBanca + totAltreVoci;
+
+        document.getElementById("conto-ale-lordo-td").innerText = "€ " + contoAleLordo.toFixed(2);
+        document.getElementById("detrazione-residuo-td").innerText = "€ " + residuoProgetto.toFixed(2);
+        document.getElementById("saldo-banca-td").innerText = "€ " + saldoBanca.toFixed(2);
+        document.getElementById("totale-disponibile-td").innerText = "€ " + totaleComplessivoDisponibile.toFixed(2);
+        document.getElementById("kpi-totconti").innerText = totaleComplessivoDisponibile.toFixed(2);
+        persistData();
+    }
+
+    function addAccountRow() {
+        let d = getActiveData();
+        d.contiBancari.push({ name: "Nuova Voce Conto", amount: 0.00, isContoAle: false });
+        renderConti();
+    }
+
+    function deleteAccount(index) {
+        let d = getActiveData();
+        d.contiBancari.splice(index, 1);
+        renderConti();
+    }
+
+    function initMonthSelect() {
+        const select = document.getElementById("monthSelect");
+        select.innerHTML = "";
+        let months = getYearMonths(currentYearKey);
+        months.forEach((m, idx) => { select.innerHTML += `<option value="${idx}">${m.label}</option>`; });
+    }
+
+    function renderMonthCalendar() {
+        let d = getActiveData();
+        const monthIdx = parseInt(document.getElementById("monthSelect").value) || 0;
+        let months = getYearMonths(currentYearKey);
+        const monthObj = months[monthIdx];
+        const tbody = document.getElementById("calendar-tbody");
+        tbody.innerHTML = "";
+
+        const daysInMonth = new Date(monthObj.year, monthObj.month + 1, 0).getDate();
+        const dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+        let totOreMese = 0, ferieMese = 0, malattiaMese = 0;
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${monthObj.year}-${String(monthObj.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dateObj = new Date(monthObj.year, monthObj.month, day);
+            const dayName = dayNames[dateObj.getDay()];
+
+            if (!d.calendarData[dateStr]) {
+                d.calendarData[dateStr] = { hours: (dayObjIsDefaultWorkDay(dateObj) ? 4 : 0), status: "ordinario", note: "" };
+            }
+
+            const current = d.calendarData[dateStr];
+            totOreMese += parseFloat(current.hours) || 0;
+            if (current.status === "ferie") ferieMese++;
+            if (current.status === "malattia") malattiaMese++;
+
+            let rowClass = current.status === "ferie" ? "bg-ferie" : current.status === "malattia" ? "bg-malattia" : current.status === "recupero" ? "bg-recupero" : "";
+
+            tbody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td><strong>${day.toString().padStart(2, '0')}/${(monthObj.month + 1).toString().padStart(2, '0')}/${monthObj.year}</strong></td>
+                    <td>${dayName}</td>
+                    <td><input type="number" min="0" max="24" class="form-control form-control-sm text-center fw-bold" value="${current.hours}" onchange="updateCalendarCell('${dateStr}', 'hours', this.value)"></td>
+                    <td>
+                        <select class="form-select form-select-sm fw-bold" onchange="updateCalendarCell('${dateStr}', 'status', this.value)">
+                            <option value="ordinario" ${current.status === 'ordinario' ? 'selected' : ''}>Ordinario</option>
+                            <option value="ferie" ${current.status === 'ferie' ? 'selected' : ''}>Ferie</option>
+                            <option value="malattia" ${current.status === 'malattia' ? 'selected' : ''}>Malattia</option>
+                            <option value="recupero" ${current.status === 'recupero' ? 'selected' : ''}>Recupero Ore</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent" placeholder="Aggiungi note..." value="${current.note || ''}" onchange="updateCalendarCell('${dateStr}', 'note', this.value)"></td>
+                </tr>`;
+        }
+
+        document.getElementById("tot-ore-mese").innerText = totOreMese;
+        document.getElementById("sommario-mese-note").innerText = `Giorni Ferie: ${ferieMese} | Giorni Malattia: ${malattiaMese}`;
+        calcolaContatoreRecupero();
+        persistData();
+    }
+
+    function dayObjIsDefaultWorkDay(dateObj) {
+        let day = dateObj.getDay();
+        return day !== 0 && day !== 6; // Mon-Fri
+    }
+
+    function updateCalendarCell(dateStr, key, val) {
+        let d = getActiveData();
+        if (!d.calendarData[dateStr]) d.calendarData[dateStr] = { hours: 0, status: "ordinario", note: "" };
+        if (key === "hours") d.calendarData[dateStr].hours = parseFloat(val) || 0;
+        else if (key === "status") d.calendarData[dateStr].status = val;
+        else if (key === "note") d.calendarData[dateStr].note = val;
+        renderMonthCalendar();
+    }
+
+    function calcolaContatoreRecupero() {
+        let d = getActiveData();
+        let baseRecupero = 12, oreRecuperate = 0;
+        Object.keys(d.calendarData).forEach(date => {
+            if (d.calendarData[date].status === "recupero") {
+                oreRecuperate += d.calendarData[date].hours > 0 ? d.calendarData[date].hours : 4;
+            }
+        });
+        document.getElementById("contatore-recupero").innerText = baseRecupero - oreRecuperate;
+    }
+</script>
+</body>
+</html>
