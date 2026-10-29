@@ -23,12 +23,12 @@
         }
         .navbar-custom { background-color: #1e293b; color: white; }
         
-        .card-stat { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 12px 16px !important; }
-        .card-stat h6 { font-size: 0.8rem; letter-spacing: 0.5px; }
-        .card-stat h3 { font-size: 1.4rem; }
-        .card-stat i { font-size: 1.6rem !important; opacity: 0.6; }
+        .card-stat { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 10px 14px !important; }
+        .card-stat h6 { font-size: 0.75rem; letter-spacing: 0.5px; }
+        .card-stat h3 { font-size: 1.25rem; }
+        .card-stat i { font-size: 1.4rem !important; opacity: 0.6; }
 
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 24px; }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 20px; }
         
         /* COLORI RIGHE SELEZIONATE (Dinamici) */
         .bg-ferie, tr.bg-ferie td, tr.bg-ferie input, tr.bg-ferie select { 
@@ -51,37 +51,40 @@
         .badge-ferie { background-color: #d1e7dd; color: #0f5132; }
         .badge-malattia { background-color: #ffe5d0; color: #843200; }
         .badge-recupero-legenda { background-color: #e2e3e5; color: #41464b; }
-        .badge-recupero { font-size: 1.1rem; padding: 8px 16px; border-radius: 8px; }
+        .badge-recupero { font-size: 1rem; padding: 6px 12px; border-radius: 8px; }
         
-        /* NAV TABS AGEVOLE SENZA SCROLL LATERALE SU SMARTPHONE */
+        /* TASTI SCHEDE MOLTO COMPATTI E SALVASPAZIO SU SMARTPHONE */
         .nav-tabs-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
             border-bottom: none;
             background: #ffffff;
-            padding: 10px;
-            border-radius: 12px;
+            padding: 8px;
+            border-radius: 10px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .nav-tabs-grid .nav-item {
-            flex: 1 1 calc(50% - 6px); /* 2 pulsanti per riga su mobile */
+            flex: 1 1 calc(25% - 4px);
         }
         @media (min-width: 768px) {
             .nav-tabs-grid .nav-item {
-                flex: 0 1 auto; /* Su PC si adatta alla lunghezza */
+                flex: 0 1 auto;
             }
         }
         .nav-tabs-grid .nav-link {
-            font-size: 0.85rem;
+            font-size: 0.72rem;
             text-align: center;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             border: 1px solid #dee2e6;
             background-color: #f8f9fa;
             color: #334155;
-            padding: 8px 12px;
+            padding: 5px 4px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             transition: all 0.2s ease;
             width: 100%;
         }
@@ -91,7 +94,7 @@
             border-color: #1e293b !important;
         }
 
-        .input-finanziato { max-width: 250px; font-weight: bold; font-size: 1.1rem; }
+        .input-finanziato { max-width: 220px; font-weight: bold; font-size: 1.05rem; }
         .hide { display: none !important; }
 
         @media print {
@@ -101,32 +104,29 @@
             .tab-pane { display: block !important; opacity: 1 !important; visibility: visible !important; }
         }
 
-        /* REATTIVITÀ SMARTPHONE OTTIMIZZATA */
         @media (max-width: 767.98px) {
-            .table-container { padding: 12px; }
-            .card-stat h3 { font-size: 1.1rem; }
-            .card-stat h6 { font-size: 0.7rem; }
-            .badge-recupero { font-size: 0.95rem; padding: 6px 10px; }
-            .input-finanziato { max-width: 100%; }
-            .header-main-container { padding: 8px !important; }
+            .table-container { padding: 10px; }
+            .card-stat h3 { font-size: 1.05rem; }
+            .card-stat h6 { font-size: 0.65rem; }
+            .header-main-container { padding: 6px !important; }
         }
     </style>
 </head>
 <body class="pb-5">
 
-<header class="sticky-top navbar-custom p-2 p-md-3 shadow">
+<header class="sticky-top navbar-custom p-2 shadow">
     <div class="container-fluid header-main-container d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-2">
         <!-- Riga Superiore / Titolo e Anno -->
         <div class="d-flex align-items-center justify-content-between w-100">
             <div class="d-flex align-items-center gap-2">
                 <div>
                     <h1 class="fw-bold fs-5 mb-0"><i class="fa-solid fa-calculator me-2 text-warning"></i>PRO.VI</h1>
-                    <p class="text-xs text-light mb-0" style="font-size: 0.7rem;">Gestione Finanziaria e Presenze</p>
+                    <p class="text-xs text-light mb-0" style="font-size: 0.65rem;">Gestione Finanziaria e Presenze</p>
                 </div>
             </div>
-            <!-- Selettore Anno ben visibile a destra -->
+            <!-- Selettore Anno -->
             <div>
-                <select id="globalYearSelect" class="form-select form-select-sm fw-bold bg-dark text-white border-secondary" style="font-size: 0.8rem; min-width: 130px;" onchange="changeActiveYear(this.value)">
+                <select id="globalYearSelect" class="form-select form-select-sm fw-bold bg-dark text-white border-secondary" style="font-size: 0.75rem; min-width: 120px;" onchange="changeActiveYear(this.value)">
                     <option value="2026-2027">2026-2027</option>
                     <option value="2027-2028">2027-2028</option>
                     <option value="2028-2029">2028-2029</option>
@@ -135,7 +135,7 @@
             </div>
         </div>
         
-        <!-- Pulsanti Azione Header ordinati secondo le richieste -->
+        <!-- Pulsanti Azione Header -->
         <div class="d-flex flex-wrap justify-content-end align-items-center gap-1.5 w-100 border-top border-secondary pt-2 pt-md-0 border-md-0">
             <button type="button" onclick="googleSignIn()" id="googleSignInBtn" class="btn btn-light btn-sm fw-semibold shadow-sm" style="font-size:0.75rem;">Accedi Google</button>
             <button onclick="exportData()" class="btn btn-outline-light btn-sm fw-bold text-black bg-white" style="font-size:0.75rem;">Backup</button>
@@ -153,7 +153,7 @@
 <div class="container-fluid px-2 px-md-4 mt-3">
 
     <!-- DASHBOARD KPI ADATTIVA -->
-    <div class="row g-2 g-md-3 mb-3">
+    <div class="row g-2 mb-3">
         <div class="col-6 col-md-3">
             <div class="card card-stat bg-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <!-- SCHEDE DI NAVIGAZIONE A GRIGLIA (AGEVOLE E SENZA SCROLL LATERALE) -->
+    <!-- SCHEDE DI NAVIGAZIONE A GRIGLIA SALVASPAZIO -->
     <ul class="nav nav-tabs nav-tabs-grid d-print-none" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="spese-tab" data-bs-toggle="tab" data-bs-target="#spese-pane" type="button" role="tab"><i class="fa-solid fa-file-invoice-dollar me-1"></i>Spese</button>
@@ -221,11 +221,11 @@
             <button class="nav-link" id="lavoro-tab" data-bs-toggle="tab" data-bs-target="#lavoro-pane" type="button" role="tab"><i class="fa-solid fa-calendar-days me-1"></i>Presenze</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link text-success" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-pane" type="button" role="tab"><i class="fa-solid fa-cloud me-1"></i>Backup Cloud</button>
+            <button class="nav-link text-success" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-pane" type="button" role="tab"><i class="fa-solid fa-cloud me-1"></i>Cloud</button>
         </li>
     </ul>
 
-    <!-- CONTENUTO DELLE SCHEDE (VISIBILE SOLO LA SCHEDA ATTIVA A SCHERMO, TUTTE VISIBILI IN STAMPA/PDF) -->
+    <!-- CONTENUTO DELLE SCHEDE -->
     <div class="tab-content" id="myTabContent">
         
         <!-- SCHEDA 1: RENDICONTAZIONE SPESE -->
@@ -295,45 +295,19 @@
             </div>
         </div>
 
-        <!-- SCHEDA 3: DOMOTICA & INFORMATICA -->
+        <!-- SCHEDA 3: DOMOTICA & INFORMATICA (CON FINANZIAMENTI MULTIPLI DINAMICI) -->
         <div class="tab-pane fade" id="domotica-pane" role="tabpanel">
             <div class="table-container">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom gap-2">
                     <div>
                         <h4 class="fw-bold text-dark mb-1 fs-5"><i class="fa-solid fa-microchip text-primary me-2"></i>Domotica & Informatica</h4>
-                        <span class="text-muted small">Inserisci le opzioni, modifica i costi e calcola residui in tempo reale.</span>
+                        <span class="text-muted small">Gestisci i vari finanziamenti e le relative spese con calcolo automatico dei residui.</span>
                     </div>
-                    <div class="d-flex align-items-center bg-light p-2 rounded border w-100 w-md-auto justify-content-between">
-                        <label class="form-label fw-bold text-primary mb-0 me-2 small"><i class="fa-solid fa-coins me-1"></i>Finanziato (€):</label>
-                        <input type="number" step="0.01" id="domoticaFinanziatoInput" class="form-control form-control-sm input-finanziato text-end" value="4400.00" oninput="updateDomoticaFinanziato(this.value)">
-                    </div>
+                    <button class="btn btn-success btn-sm fw-bold d-print-none" onclick="addFinanziamentoDomotica()"><i class="fa-solid fa-plus me-1"></i>Nuovo Finanziamento</button>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Opzione / Smart Oggetto</th>
-                                <th class="text-end" style="min-width: 150px;">Costo / Importo (€)</th>
-                                <th class="text-center d-print-none" style="width: 80px;">Azione</th>
-                            </tr>
-                        </thead>
-                        <tbody id="domotica-tbody"></tbody>
-                        <tfoot class="table-secondary fw-bold">
-                            <tr>
-                                <td class="text-end">TOTALE SCELTE:</td>
-                                <td class="text-end text-primary fs-6" id="domotica-tot-td">€ 0.00</td>
-                                <td class="d-print-none"></td>
-                            </tr>
-                            <tr class="table-info">
-                                <td class="text-end">RESIDUO:</td>
-                                <td class="text-end text-success fs-6" id="domotica-residuo-td">€ 0.00</td>
-                                <td class="d-print-none"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <button class="btn btn-outline-primary btn-sm mt-2 d-print-none" onclick="addDomoticaRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga Opzione Domotica</button>
+                <!-- Container in cui verranno generate dinamicamente le tabelle dei finanziamenti -->
+                <div id="finanziamenti-domotica-container"></div>
             </div>
         </div>
 
@@ -594,7 +568,23 @@
     function getDefaultYearData() {
         return {
             budgetIniziale: 15000.00,
-            domoticaFinanziato: 4400.00,
+            domoticaFinanziamenti: [
+                {
+                    id: 1,
+                    titolo: "Finanziamento Principale",
+                    finanziato: 4400.00,
+                    items: [
+                        { name: "spioncino smarth", amount: 139.93 },
+                        { name: "Cellulare", amount: 0.00 },
+                        { name: "Cronotermostato Smart", amount: 170.00 },
+                        { name: "Robot lavapavimenti", amount: 0.00 },
+                        { name: "rete elettica", amount: 1352.00 },
+                        { name: "Smartwatch", amount: 150.00 },
+                        { name: "alexa echo dot", amount: 139.96 },
+                        { name: "IMPIANTO HOME SMART", amount: 960.00 }
+                    ]
+                }
+            ],
             spese: [
                 { id: 1, date: "2026-03-02", type: "fideiussione", amount: 520.00 },
                 { id: 2, date: "2026-03-05", type: "serrature", amount: 720.00 },
@@ -611,16 +601,6 @@
                 { id: 6, desc: "Contratto Collaboratore", prev: 9000.00, real: 0.00, isContract: true },
                 { id: 7, desc: "Avvio rapporto lavoro - Elaborazione cedolini", prev: 0.00, real: 0.00 },
                 { id: 8, desc: "apertura polizza fideiussoria + notaio", prev: 520.00, real: 520.00 }
-            ],
-            domoticaItems: [
-                { name: "spioncino smarth", amount: 139.93 },
-                { name: "Cellulare", amount: 0.00 },
-                { name: "Cronotermostato Smart", amount: 170.00 },
-                { name: "Robot lavapavimenti", amount: 0.00 },
-                { name: "rete elettica", amount: 1352.00 },
-                { name: "Smartwatch", amount: 150.00 },
-                { name: "alexa echo dot", amount: 139.96 },
-                { name: "IMPIANTO HOME SMART", amount: 960.00 }
             ],
             prospetto1: [
                 { desc: "Contratto", perc: 60, real: 9713.46 },
@@ -653,7 +633,17 @@
         if (!allYearsData[currentYearKey]) {
             allYearsData[currentYearKey] = getDefaultYearData();
         }
-        return allYearsData[currentYearKey];
+        let d = allYearsData[currentYearKey];
+        // Retrocompatibilità per vecchi salvataggi mono-finanziamento domotica
+        if (!d.domoticaFinanziamenti && d.domoticaItems) {
+            d.domoticaFinanziamenti = [{
+                id: 1,
+                titolo: "Finanziamento Principale",
+                finanziato: d.domoticaFinanziato || 4400.00,
+                items: d.domoticaItems
+            }];
+        }
+        return d;
     }
 
     function getYearMonths(yearKey) {
@@ -699,11 +689,10 @@
     function renderAll() {
         let d = getActiveData();
         document.getElementById("percBudgetInput").value = d.budgetIniziale;
-        document.getElementById("domoticaFinanziatoInput").value = d.domoticaFinanziato;
         document.getElementById("globalYearSelect").value = currentYearKey;
         document.getElementById("lavoro-subtitle").innerText = `Pianificazione presenze per l'anno ${currentYearKey}`;
         renderSpese();
-        renderDomotica();
+        renderDomoticaFinanziamenti();
         renderPercentuali();
         renderConti();
         renderMonthCalendar();
@@ -725,8 +714,10 @@
         let prevData = d.preventivi.map(p => ({ "Descrizione": p.desc, "Preventivo (€)": p.prev, "Spesa Reale (€)": p.real }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prevData), "Preventivi");
 
-        let domData = d.domoticaItems.map(item => ({ "Opzione / Smart Oggetto": item.name, "Costo (€)": item.amount }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(domData), "Domotica");
+        d.domoticaFinanziamenti.forEach((f, idx) => {
+            let domData = f.items.map(item => ({ "Opzione / Smart Oggetto": item.name, "Costo (€)": item.amount }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(domData), `Domotica ${idx+1}`);
+        });
 
         let p1Data = d.prospetto1.map(item => ({ "Voce": item.desc, "%": item.perc, "Preventivo (€)": d.budgetIniziale * (item.perc/100), "Reale (€)": item.real }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(p1Data), "Prospetto 1");
@@ -768,10 +759,14 @@
                     let d = JSON.parse(oldRaw);
                     allYearsData["2026-2027"] = {
                         budgetIniziale: 15000.00,
-                        domoticaFinanziato: 4400.00,
+                        domoticaFinanziamenti: [{
+                            id: 1,
+                            titolo: "Finanziamento Principale",
+                            finanziato: d.domoticaFinanziato || 4400.00,
+                            items: d.domoticaItems || []
+                        }],
                         spese: d.spese || [],
                         preventivi: d.preventivi || [],
-                        domoticaItems: d.domoticaItems || [],
                         prospetto1: d.prospetto1 || [],
                         prospetto16: d.prospetto16 || [],
                         contiBancari: d.contiBancari || [],
@@ -812,10 +807,9 @@
                 } else if(d.spese) {
                     allYearsData[currentYearKey] = {
                         budgetIniziale: 15000.00,
-                        domoticaFinanziato: 4400.00,
+                        domoticaFinanziamenti: [{ id: 1, titolo: "Finanziamento Principale", finanziato: d.domoticaFinanziato || 4400.00, items: d.domoticaItems || [] }],
                         spese: d.spese || [],
                         preventivi: d.preventivi || [],
-                        domoticaItems: d.domoticaItems || [],
                         prospetto1: d.prospetto1 || [],
                         prospetto16: d.prospetto16 || [],
                         contiBancari: d.contiBancari || [],
@@ -1020,10 +1014,9 @@
         } else if(data.spese) {
             allYearsData["2026-2027"] = {
                 budgetIniziale: 15000.00,
-                domoticaFinanziato: 4400.00,
+                domoticaFinanziamenti: [{ id: 1, titolo: "Finanziamento Principale", finanziato: data.domoticaFinanziato || 4400.00, items: data.domoticaItems || [] }],
                 spese: data.spese || [],
                 preventivi: data.preventivi || [],
-                domoticaItems: data.domoticaItems || [],
                 prospetto1: data.prospetto1 || [],
                 prospetto16: data.prospetto16 || [],
                 contiBancari: data.contiBancari || [],
@@ -1088,12 +1081,6 @@
         renderSpese();
         renderPercentuali();
         renderConti();
-    }
-
-    function updateDomoticaFinanziato(val) {
-        let d = getActiveData();
-        d.domoticaFinanziato = parseFloat(val) || 0;
-        renderDomotica();
     }
 
     function calcolaTotaleBusteEContributi() {
@@ -1197,38 +1184,110 @@
         renderPreventivi();
     }
 
-    function renderDomotica() {
+    // --- GESTIONE FINANZIAMENTI MULTIPLI DOMOTICA ---
+    function renderDomoticaFinanziamenti() {
         let d = getActiveData();
-        const tbody = document.getElementById("domotica-tbody");
-        tbody.innerHTML = "";
-        let totScelte = 0;
+        const container = document.getElementById("finanziamenti-domotica-container");
+        container.innerHTML = "";
 
-        d.domoticaItems.forEach((item, index) => {
-            totScelte += item.amount;
-            tbody.innerHTML += `
-                <tr>
-                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().domoticaItems[${index}].name = this.value; renderDomotica();"></td>
-                    <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().domoticaItems[${index}].amount = parseFloat(this.value)||0; renderDomotica();"></td>
-                    <td class="text-center d-print-none"><button class="btn btn-sm btn-outline-danger" onclick="deleteDomoticaRow(${index})"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>`;
+        d.domoticaFinanziamenti.forEach((f, fIndex) => {
+            let totScelte = f.items.reduce((sum, item) => sum + item.amount, 0);
+            let residuo = f.finanziato - totScelte;
+
+            let tableHtml = `
+                <div class="card border mb-4 p-3 shadow-sm">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-grow-1">
+                            <input type="text" class="form-control form-control-sm fw-bold text-dark fs-6" style="max-width: 280px;" value="${f.titolo}" onchange="getActiveData().domoticaFinanziamenti[${fIndex}].titolo = this.value; persistData();" placeholder="Nome Finanziamento">
+                        </div>
+                        <div class="d-flex align-items-center bg-light p-2 rounded border gap-2">
+                            <label class="form-label fw-bold text-primary mb-0 small"><i class="fa-solid fa-coins me-1"></i>Finanziato (€):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm input-finanziato text-end" value="${f.finanziato}" oninput="updateDomoticaFinanziato(${fIndex}, this.value)">
+                            ${d.domoticaFinanziamenti.length > 1 ? `<button class="btn btn-outline-danger btn-sm d-print-none" title="Elimina Finanziamento" onclick="deleteFinanziamentoDomotica(${fIndex})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Opzione / Smart Oggetto</th>
+                                    <th class="text-end" style="min-width: 150px;">Costo / Importo (€)</th>
+                                    <th class="text-center d-print-none" style="width: 80px;">Azione</th>
+                                </tr>
+                            </thead>
+                            <tbody id="domotica-tbody-${fIndex}">`;
+
+            f.items.forEach((item, itemIndex) => {
+                tableHtml += `
+                    <tr>
+                        <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().domoticaFinanziamenti[${fIndex}].items[${itemIndex}].name = this.value; renderDomoticaFinanziamenti();"></td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().domoticaFinanziamenti[${fIndex}].items[${itemIndex}].amount = parseFloat(this.value)||0; renderDomoticaFinanziamenti();"></td>
+                        <td class="text-center d-print-none"><button class="btn btn-sm btn-outline-danger" onclick="deleteDomoticaItem(${fIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>`;
+            });
+
+            tableHtml += `
+                            </tbody>
+                            <tfoot class="table-secondary fw-bold">
+                                <tr>
+                                    <td class="text-end">TOTALE SCELTE:</td>
+                                    <td class="text-end text-primary fs-6">€ ${totScelte.toFixed(2)}</td>
+                                    <td class="d-print-none"></td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td class="text-end">RESIDUO:</td>
+                                    <td class="text-end text-success fs-6">€ ${residuo.toFixed(2)}</td>
+                                    <td class="d-print-none"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm mt-2 d-print-none" onclick="addDomoticaItem(${fIndex})"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga in questo Finanziamento</button>
+                </div>`;
+
+            container.innerHTML += tableHtml;
         });
 
-        let residuo = d.domoticaFinanziato - totScelte;
-        document.getElementById("domotica-tot-td").innerText = "€ " + totScelte.toFixed(2);
-        document.getElementById("domotica-residuo-td").innerText = "€ " + residuo.toFixed(2);
         persistData();
     }
 
-    function addDomoticaRow() {
+    function addFinanziamentoDomotica() {
         let d = getActiveData();
-        d.domoticaItems.push({ name: "Nuovo Oggetto Smart", amount: 0.00 });
-        renderDomotica();
+        d.domoticaFinanziamenti.push({
+            id: Date.now(),
+            titolo: `Nuovo Finanziamento ${d.domoticaFinanziamenti.length + 1}`,
+            finanziato: 0.00,
+            items: [{ name: "Nuovo Oggetto Smart", amount: 0.00 }]
+        });
+        renderDomoticaFinanziamenti();
     }
 
-    function deleteDomoticaRow(index) {
+    function deleteFinanziamentoDomotica(fIndex) {
         let d = getActiveData();
-        d.domoticaItems.splice(index, 1);
-        renderDomotica();
+        if (d.domoticaFinanziamenti.length <= 1) return;
+        if (confirm("Eliminare questo finanziamento e tutte le sue righe?")) {
+            d.domoticaFinanziamenti.splice(fIndex, 1);
+            renderDomoticaFinanziamenti();
+        }
+    }
+
+    function updateDomoticaFinanziato(fIndex, val) {
+        let d = getActiveData();
+        d.domoticaFinanziamenti[fIndex].finanziato = parseFloat(val) || 0;
+        renderDomoticaFinanziamenti();
+    }
+
+    function addDomoticaItem(fIndex) {
+        let d = getActiveData();
+        d.domoticaFinanziamenti[fIndex].items.push({ name: "Nuovo Oggetto Smart", amount: 0.00 });
+        renderDomoticaFinanziamenti();
+    }
+
+    function deleteDomoticaItem(fIndex, itemIndex) {
+        let d = getActiveData();
+        d.domoticaFinanziamenti[fIndex].items.splice(itemIndex, 1);
+        renderDomoticaFinanziamenti();
     }
 
     function renderPercentuali() {
