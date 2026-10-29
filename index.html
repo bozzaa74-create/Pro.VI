@@ -11,8 +11,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Libreria per Esportazione Excel (SheetJS XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { 
+            background-color: #f4f6f9; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
         .navbar-custom { background-color: #1e293b; color: white; }
         
         .card-stat { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 12px 16px !important; }
@@ -20,100 +28,154 @@
         .card-stat h3 { font-size: 1.4rem; }
         .card-stat i { font-size: 1.6rem !important; opacity: 0.6; }
 
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 24px; }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 24px; }
         
-        .bg-ferie { background-color: #d1e7dd !important; color: #0f5132 !important; font-weight: bold; }
-        .bg-malattia { background-color: #ffe5d0 !important; color: #843200 !important; font-weight: bold; }
-        .bg-recupero { background-color: #e2e3e5 !important; color: #41464b !important; font-weight: bold; }
+        /* COLORI RIGHE SELEZIONATE (Dinamici) */
+        .bg-ferie, tr.bg-ferie td, tr.bg-ferie input, tr.bg-ferie select { 
+            background-color: #d1e7dd !important; 
+            color: #0f5132 !important; 
+            font-weight: bold; 
+        }
+        .bg-malattia, tr.bg-malattia td, tr.bg-malattia input, tr.bg-malattia select { 
+            background-color: #ffe5d0 !important; 
+            color: #843200 !important; 
+            font-weight: bold; 
+        }
+        .bg-recupero, tr.bg-recupero td, tr.bg-recupero input, tr.bg-recupero select { 
+            background-color: #e2e3e5 !important; 
+            color: #41464b !important; 
+            font-weight: bold; 
+        }
         
+        /* BADGE LEGENDA */
         .badge-ferie { background-color: #d1e7dd; color: #0f5132; }
         .badge-malattia { background-color: #ffe5d0; color: #843200; }
         .badge-recupero-legenda { background-color: #e2e3e5; color: #41464b; }
         .badge-recupero { font-size: 1.1rem; padding: 8px 16px; border-radius: 8px; }
         
+        /* SCROLL ORIZZONTALE TABS SU SMARTPHONE */
+        .nav-tabs-responsive {
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .nav-tabs-responsive::-webkit-scrollbar { display: none; }
+        .nav-tabs-responsive .nav-item { flex: 0 0 auto; }
         .nav-tabs .nav-link { font-size: 0.9rem; }
+
         .input-finanziato { max-width: 250px; font-weight: bold; font-size: 1.1rem; }
         .hide { display: none !important; }
+
+        @media print {
+            .d-print-none { display: none !important; }
+            body { background: white !important; }
+            .table-container { box-shadow: none !important; border: 1px solid #dee2e6; break-inside: avoid; }
+        }
+
+        /* REATTIVITÀ SMARTPHONE OTTIMIZZATA */
+        @media (max-width: 767.98px) {
+            .table-container { padding: 12px; }
+            .card-stat h3 { font-size: 1.1rem; }
+            .card-stat h6 { font-size: 0.7rem; }
+            .badge-recupero { font-size: 0.95rem; padding: 6px 10px; }
+            .input-finanziato { max-width: 100%; }
+            .header-main-container { padding: 8px !important; }
+        }
     </style>
 </head>
-<body class="pb-10">
+<body class="pb-5">
 
-<header class="sticky top-0 z-20 navbar-custom p-3 shadow flex justify-between items-center gap-3">
-    <div class="d-flex align-items-center gap-3">
-        <div>
-            <h1 class="font-bold text-lg mb-0"><i class="fa-solid fa-calculator me-2 text-warning"></i>PRO.VI</h1>
-            <p class="text-xs text-slate-300 mb-0">Gestione Finanziaria e Presenze</p>
+<header class="sticky-top navbar-custom p-2 p-md-3 shadow">
+    <div class="container-fluid header-main-container d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-2">
+        <!-- Riga Superiore / Titolo e Anno -->
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center gap-2">
+                <div>
+                    <h1 class="fw-bold fs-5 mb-0"><i class="fa-solid fa-calculator me-2 text-warning"></i>PRO.VI</h1>
+                    <p class="text-xs text-light mb-0" style="font-size: 0.7rem;">Gestione Finanziaria e Presenze</p>
+                </div>
+            </div>
+            <!-- Selettore Anno ben visibile a destra -->
+            <div>
+                <select id="globalYearSelect" class="form-select form-select-sm fw-bold bg-dark text-white border-secondary" style="font-size: 0.8rem; min-width: 130px;" onchange="changeActiveYear(this.value)">
+                    <option value="2026-2027">2026-2027</option>
+                    <option value="2027-2028">2027-2028</option>
+                    <option value="2028-2029">2028-2029</option>
+                    <option value="2029-2030">2029-2030</option>
+                </select>
+            </div>
         </div>
-        <div class="ms-3">
-            <select id="globalYearSelect" class="form-select form-select-sm fw-bold bg-dark text-white border-secondary" onchange="changeActiveYear(this.value)">
-                <option value="2026-2027">PRO.VI 2026-2027</option>
-                <option value="2027-2028">PRO.VI 2027-2028</option>
-                <option value="2028-2029">PRO.VI 2028-2029</option>
-                <option value="2029-2030">PRO.VI 2029-2030</option>
-            </select>
+        
+        <!-- Pulsanti Azione Header ordinati secondo le richieste -->
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-1.5 w-100 border-top border-secondary pt-2 pt-md-0 border-md-0">
+            <button type="button" onclick="googleSignIn()" id="googleSignInBtn" class="btn btn-light btn-sm fw-semibold shadow-sm" style="font-size:0.75rem;">Accedi Google</button>
+            <button onclick="exportData()" class="btn btn-outline-light btn-sm fw-bold text-black bg-white" style="font-size:0.75rem;">Backup</button>
+            <button onclick="document.getElementById('importFile').click()" class="btn btn-outline-light btn-sm fw-bold text-black bg-white" style="font-size:0.75rem;">Importa</button>
+            <input id="importFile" type="file" accept=".json,application/json" class="hide" onchange="importData(event)">
+            <button onclick="googleSignOut()" id="googleSignOutBtn" class="hide btn btn-light btn-sm fw-semibold shadow-sm" style="font-size:0.75rem;">Esci</button>
+            
+            <!-- Pulsanti PDF ed Excel con sole icone -->
+            <button onclick="exportToPDF()" class="btn btn-danger btn-sm fw-bold shadow-sm" title="Salva come PDF" style="font-size:0.75rem;"><i class="fa-solid fa-file-pdf"></i></button>
+            <button onclick="exportToExcel()" class="btn btn-success btn-sm fw-bold shadow-sm" title="Esporta in Excel" style="font-size:0.75rem;"><i class="fa-solid fa-file-excel"></i></button>
         </div>
-    </div>
-    <div class="flex flex-wrap justify-end items-center gap-1.5">
-        <button type="button" onclick="googleSignIn()" id="googleSignInBtn" class="rounded-lg bg-white text-slate-900 border px-2.5 py-1.5 text-xs font-semibold shadow-sm">Accedi con Google</button>
-        <button onclick="exportData()" class="rounded-lg bg-white/20 border border-white/40 px-2.5 py-1.5 text-xs font-bold text-black bg-white">Backup Locale</button>
-        <button onclick="document.getElementById('importFile').click()" class="rounded-lg bg-white/20 border border-white/40 px-2.5 py-1.5 text-xs font-bold text-black bg-white">Importa</button>
-        <input id="importFile" type="file" accept=".json,application/json" class="hide" onchange="importData(event)">
-        <button onclick="googleSignOut()" id="googleSignOutBtn" class="hide rounded-lg bg-red-600 text-white px-2.5 py-1.5 text-xs font-semibold">Esci</button>
     </div>
 </header>
 
-<div class="container-fluid px-4 mt-4">
+<div class="container-fluid px-2 px-md-4 mt-3">
 
-    <!-- DASHBOARD KPI COMPATTE -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
+    <!-- DASHBOARD KPI ADATTIVA -->
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6 col-md-3">
             <div class="card card-stat bg-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Finanziamento Iniziale</h6>
+                        <h6 class="text-uppercase mb-1">Finanziamento</h6>
                         <h3 class="fw-bold mb-0">€ <span id="kpi-budget">15000.00</span></h3>
                     </div>
-                    <i class="fa-solid fa-piggy-bank"></i>
+                    <i class="fa-solid fa-piggy-bank d-none d-sm-inline"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card card-stat bg-danger text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Totale Spese Inserite</h6>
+                        <h6 class="text-uppercase mb-1">Totale Spese</h6>
                         <h3 class="fw-bold mb-0">€ <span id="kpi-totspese">0.00</span></h3>
                     </div>
-                    <i class="fa-solid fa-receipt"></i>
+                    <i class="fa-solid fa-receipt d-none d-sm-inline"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card card-stat bg-success text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Residuo Progetto</h6>
                         <h3 class="fw-bold mb-0">€ <span id="kpi-residuo">0.00</span></h3>
                     </div>
-                    <i class="fa-solid fa-wallet"></i>
+                    <i class="fa-solid fa-wallet d-none d-sm-inline"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card card-stat bg-dark text-white">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Totale Disponibilità Conti</h6>
+                        <h6 class="text-uppercase mb-1">Totale Conti</h6>
                         <h3 class="fw-bold mb-0">€ <span id="kpi-totconti">0.00</span></h3>
                     </div>
-                    <i class="fa-solid fa-building-columns"></i>
+                    <i class="fa-solid fa-building-columns d-none d-sm-inline"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SCHEDE DI NAVIGAZIONE (TABS) -->
-    <ul class="nav nav-tabs mb-4 flex-wrap" id="myTab" role="tablist">
+    <!-- SCHEDE DI NAVIGAZIONE -->
+    <ul class="nav nav-tabs nav-tabs-responsive mb-4 d-print-none" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold" id="spese-tab" data-bs-toggle="tab" data-bs-target="#spese-pane" type="button" role="tab"><i class="fa-solid fa-file-invoice-dollar me-1"></i>Rendicontazione Spese</button>
         </li>
@@ -137,15 +199,15 @@
         </li>
     </ul>
 
-    <!-- CONTENUTO DELLE SCHEDE -->
-    <div class="tab-content" id="myTabContent">
+    <!-- CONTENUTO DELLE SCHEDE (TUTTI VISIBILI PER LA STAMPA/PDF COMPLETA) -->
+    <div class="tab-content" id="allPanesExportContainer">
         
         <!-- SCHEDA 1: RENDICONTAZIONE SPESE -->
-        <div class="tab-pane fade show active" id="spese-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="spese-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Rendicontazione Spese Progetto</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="fa-solid fa-plus me-1"></i>Nuova Spesa</button>
+                    <h4 class="fw-bold text-dark mb-0 fs-5"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Rendicontazione Spese Progetto</h4>
+                    <button class="btn btn-primary btn-sm d-print-none" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="fa-solid fa-plus me-1"></i>Nuova Spesa</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle border">
@@ -155,20 +217,20 @@
                                 <th>Data</th>
                                 <th>Tipo Spesa / Descrizione</th>
                                 <th class="text-end">Importo (€)</th>
-                                <th class="text-center">Azione</th>
+                                <th class="text-center d-print-none">Azione</th>
                             </tr>
                         </thead>
                         <tbody id="spese-tbody"></tbody>
                         <tfoot class="table-secondary fw-bold">
                             <tr>
                                 <td colspan="3" class="text-end">TOTALE SPESE:</td>
-                                <td class="text-end text-danger fs-5" id="tot-spese-td">€ 0.00</td>
-                                <td></td>
+                                <td class="text-end text-danger fs-6" id="tot-spese-td">€ 0.00</td>
+                                <td class="d-print-none"></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">RESIDUO PROGETTO (15.000 € - Totale Spese):</td>
-                                <td class="text-end text-success fs-5" id="residuo-td">€ 0.00</td>
-                                <td></td>
+                                <td colspan="3" class="text-end">RESIDUO PROGETTO:</td>
+                                <td class="text-end text-success fs-6" id="residuo-td">€ 0.00</td>
+                                <td class="d-print-none"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -177,20 +239,20 @@
         </div>
 
         <!-- SCHEDA 2: PREVENTIVI & SPESE REALI -->
-        <div class="tab-pane fade" id="preventivi-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="preventivi-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-table-list text-primary me-2"></i>Preventivo Spese Progetto & Reale</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPreventivoModal"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga</button>
+                    <h4 class="fw-bold text-dark mb-0 fs-5"><i class="fa-solid fa-table-list text-primary me-2"></i>Preventivo Spese Progetto & Reale</h4>
+                    <button class="btn btn-primary btn-sm d-print-none" data-bs-toggle="modal" data-bs-target="#addPreventivoModal"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>Preventivo Spese Progetto</th>
-                                <th class="text-end" style="width: 160px;">Importo Preventivo (€)</th>
-                                <th class="text-end" style="width: 160px;">Spesa Reale (€)</th>
-                                <th class="text-center" style="width: 80px;">Azione</th>
+                                <th class="text-end" style="min-width: 130px;">Importo Preventivo (€)</th>
+                                <th class="text-end" style="min-width: 130px;">Spesa Reale (€)</th>
+                                <th class="text-center d-print-none" style="width: 80px;">Azione</th>
                             </tr>
                         </thead>
                         <tbody id="preventivi-tbody"></tbody>
@@ -199,7 +261,7 @@
                                 <td>TOTALE:</td>
                                 <td class="text-end" id="tot-prev-td">€ 0.00</td>
                                 <td class="text-end text-danger" id="tot-reale-td">€ 0.00</td>
-                                <td></td>
+                                <td class="d-print-none"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -208,16 +270,16 @@
         </div>
 
         <!-- SCHEDA 3: DOMOTICA & INFORMATICA -->
-        <div class="tab-pane fade" id="domotica-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="domotica-pane" role="tabpanel">
             <div class="table-container">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
                     <div>
-                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-microchip text-primary me-2"></i>Domotica & Informatica</h4>
-                        <span class="text-muted">Inserisci le opzioni, modifica i costi e calcola residui in tempo reale.</span>
+                        <h4 class="fw-bold text-dark mb-1 fs-5"><i class="fa-solid fa-microchip text-primary me-2"></i>Domotica & Informatica</h4>
+                        <span class="text-muted small">Inserisci le opzioni, modifica i costi e calcola residui in tempo reale.</span>
                     </div>
-                    <div class="d-flex align-items-center bg-light p-2 rounded border">
-                        <label class="form-label fw-bold text-primary mb-0 me-2"><i class="fa-solid fa-coins me-1"></i>Importo Finanziato (€):</label>
-                        <input type="number" step="0.01" id="domoticaFinanziatoInput" class="form-control input-finanziato text-end" value="4400.00" oninput="updateDomoticaFinanziato(this.value)">
+                    <div class="d-flex align-items-center bg-light p-2 rounded border w-100 w-md-auto justify-content-between">
+                        <label class="form-label fw-bold text-primary mb-0 me-2 small"><i class="fa-solid fa-coins me-1"></i>Finanziato (€):</label>
+                        <input type="number" step="0.01" id="domoticaFinanziatoInput" class="form-control form-control-sm input-finanziato text-end" value="4400.00" oninput="updateDomoticaFinanziato(this.value)">
                     </div>
                 </div>
 
@@ -226,40 +288,40 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>Opzione / Smart Oggetto</th>
-                                <th class="text-end" style="width: 200px;">Costo / Importo (€)</th>
-                                <th class="text-center" style="width: 80px;">Azione</th>
+                                <th class="text-end" style="min-width: 150px;">Costo / Importo (€)</th>
+                                <th class="text-center d-print-none" style="width: 80px;">Azione</th>
                             </tr>
                         </thead>
                         <tbody id="domotica-tbody"></tbody>
                         <tfoot class="table-secondary fw-bold">
                             <tr>
                                 <td class="text-end">TOTALE SCELTE:</td>
-                                <td class="text-end text-primary fs-5" id="domotica-tot-td">€ 0.00</td>
-                                <td></td>
+                                <td class="text-end text-primary fs-6" id="domotica-tot-td">€ 0.00</td>
+                                <td class="d-print-none"></td>
                             </tr>
                             <tr class="table-info">
-                                <td class="text-end">RESIDUO (Finanziato - Scelte):</td>
-                                <td class="text-end text-success fs-5" id="domotica-residuo-td">€ 0.00</td>
-                                <td></td>
+                                <td class="text-end">RESIDUO:</td>
+                                <td class="text-end text-success fs-6" id="domotica-residuo-td">€ 0.00</td>
+                                <td class="d-print-none"></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                <button class="btn btn-outline-primary btn-sm mt-2" onclick="addDomoticaRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga Opzione Domotica</button>
+                <button class="btn btn-outline-primary btn-sm mt-2 d-print-none" onclick="addDomoticaRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Riga Opzione Domotica</button>
             </div>
         </div>
 
         <!-- SCHEDA 4: PERCENTUALI E PROSPETTI -->
-        <div class="tab-pane fade" id="percentuali-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="percentuali-pane" role="tabpanel">
             <div class="table-container">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
                     <div>
-                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-percent text-primary me-2"></i>Percentuali e Prospetti di Spesa</h4>
-                        <span class="text-muted">Formula automatica: Preventivo = Budget × % Inserita</span>
+                        <h4 class="fw-bold text-dark mb-1 fs-5"><i class="fa-solid fa-percent text-primary me-2"></i>Percentuali e Prospetti di Spesa</h4>
+                        <span class="text-muted small">Formula automatica: Preventivo = Budget × % Inserita</span>
                     </div>
-                    <div class="d-flex align-items-center bg-light p-2 rounded border">
-                        <label class="form-label fw-bold text-primary mb-0 me-2"><i class="fa-solid fa-wallet me-1"></i>Budget Iniziale (€):</label>
-                        <input type="number" step="0.01" id="percBudgetInput" class="form-control input-finanziato text-end" value="15000.00" oninput="updateBudgetIniziale(this.value)">
+                    <div class="d-flex align-items-center bg-light p-2 rounded border w-100 w-md-auto justify-content-between">
+                        <label class="form-label fw-bold text-primary mb-0 me-2 small"><i class="fa-solid fa-wallet me-1"></i>Budget Iniziale (€):</label>
+                        <input type="number" step="0.01" id="percBudgetInput" class="form-control form-control-sm input-finanziato text-end" value="15000.00" oninput="updateBudgetIniziale(this.value)">
                     </div>
                 </div>
 
@@ -267,54 +329,58 @@
                     <!-- PROSPETTO 1 -->
                     <div class="col-lg-6">
                         <div class="card p-3 border">
-                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-list-check text-success me-2"></i>PROSPETTO 1</h5>
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Voce</th>
-                                        <th style="width: 100px;" class="text-center">%</th>
-                                        <th style="width: 140px;" class="text-end">Preventivo (€)</th>
-                                        <th style="width: 140px;" class="text-end">Reale (€)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="p1-tbody"></tbody>
-                                <tfoot class="table-secondary fw-bold">
-                                    <tr>
-                                        <td>TOTALE:</td>
-                                        <td class="text-center" id="p1-tot-perc">0%</td>
-                                        <td class="text-end" id="p1-tot-prev">€ 0.00</td>
-                                        <td class="text-end text-danger" id="p1-tot-real">€ 0.00</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addProspettoRow('prospetto1')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P1</button>
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3 fs-6"><i class="fa-solid fa-list-check text-success me-2"></i>PROSPETTO 1</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Voce</th>
+                                            <th style="width: 70px;" class="text-center">%</th>
+                                            <th style="min-width: 110px;" class="text-end">Preventivo (€)</th>
+                                            <th style="min-width: 110px;" class="text-end">Reale (€)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="p1-tbody"></tbody>
+                                    <tfoot class="table-secondary fw-bold">
+                                        <tr>
+                                            <td>TOTALE:</td>
+                                            <td class="text-center" id="p1-tot-perc">0%</td>
+                                            <td class="text-end" id="p1-tot-prev">€ 0.00</td>
+                                            <td class="text-end text-danger" id="p1-tot-real">€ 0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm mt-2 d-print-none" onclick="addProspettoRow('prospetto1')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P1</button>
                         </div>
                     </div>
 
                     <!-- PROSPETTO 16 ORE -->
                     <div class="col-lg-6">
                         <div class="card p-3 border">
-                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-clock text-warning me-2"></i>PROSPETTO 16 ORE</h5>
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Voce</th>
-                                        <th style="width: 100px;" class="text-center">%</th>
-                                        <th style="width: 140px;" class="text-end">Preventivo (€)</th>
-                                        <th style="width: 140px;" class="text-end">Reale (€)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="p16-tbody"></tbody>
-                                <tfoot class="table-secondary fw-bold">
-                                    <tr>
-                                        <td>TOTALE:</td>
-                                        <td class="text-center" id="p16-tot-perc">0%</td>
-                                        <td class="text-end" id="p16-tot-prev">€ 0.00</td>
-                                        <td class="text-end text-danger" id="p16-tot-real">€ 0.00</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addProspettoRow('prospetto16')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P16</button>
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3 fs-6"><i class="fa-solid fa-clock text-warning me-2"></i>PROSPETTO 16 ORE</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Voce</th>
+                                            <th style="width: 70px;" class="text-center">%</th>
+                                            <th style="min-width: 110px;" class="text-end">Preventivo (€)</th>
+                                            <th style="min-width: 110px;" class="text-end">Reale (€)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="p16-tbody"></tbody>
+                                    <tfoot class="table-secondary fw-bold">
+                                        <tr>
+                                            <td>TOTALE:</td>
+                                            <td class="text-center" id="p16-tot-perc">0%</td>
+                                            <td class="text-end" id="p16-tot-prev">€ 0.00</td>
+                                            <td class="text-end text-danger" id="p16-tot-real">€ 0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm mt-2 d-print-none" onclick="addProspettoRow('prospetto16')"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce P16</button>
                         </div>
                     </div>
                 </div>
@@ -322,10 +388,10 @@
         </div>
 
         <!-- SCHEDA 5: CONTI E SALDI BANCARI -->
-        <div class="tab-pane fade" id="conti-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="conti-pane" role="tabpanel">
             <div class="table-container">
-                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-building-columns text-secondary me-2"></i>Conti e Saldi Bancari</h4>
-                <p class="text-muted">Il <strong>Conto Ale</strong> rappresenta il totale bancario lordo. Da esso viene sottratto automaticamente il <em>Residuo Progetto</em> per ottenere il <strong>Saldo Banca</strong> effettivo, a cui si sommano le altre voci.</p>
+                <h4 class="fw-bold text-dark mb-2 fs-5"><i class="fa-solid fa-building-columns text-secondary me-2"></i>Conti e Saldi Bancari</h4>
+                <p class="text-muted small">Il <strong>Conto Ale</strong> rappresenta il totale bancario lordo. Da esso viene sottratto automaticamente il <em>Residuo Progetto</em> per ottenere il <strong>Saldo Banca</strong> effettivo, a cui si sommano le altre voci.</p>
                 
                 <div class="row">
                     <div class="col-lg-8">
@@ -334,8 +400,8 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Voce / Conto</th>
-                                        <th style="width: 160px;" class="text-end">Importo (€)</th>
-                                        <th class="text-center" style="width: 80px;">Azione</th>
+                                        <th style="min-width: 130px;" class="text-end">Importo (€)</th>
+                                        <th class="text-center d-print-none" style="width: 80px;">Azione</th>
                                     </tr>
                                 </thead>
                                 <tbody id="conti-tbody"></tbody>
@@ -343,55 +409,55 @@
                                     <tr class="table-warning">
                                         <td class="fw-bold text-danger">Conto Ale Lordo:</td>
                                         <td class="fw-bold text-end" id="conto-ale-lordo-td">€ 0.00</td>
-                                        <td></td>
+                                        <td class="d-print-none"></td>
                                     </tr>
                                     <tr class="table-warning">
                                         <td class="fw-bold text-danger">- Meno Residuo Progetto:</td>
                                         <td class="fw-bold text-end text-danger" id="detrazione-residuo-td">€ 0.00</td>
-                                        <td></td>
+                                        <td class="d-print-none"></td>
                                     </tr>
                                     <tr class="table-info">
                                         <td class="fw-bold">= Saldo Banca (Conto Ale Netto):</td>
                                         <td class="fw-bold text-end" id="saldo-banca-td">€ 0.00</td>
-                                        <td></td>
+                                        <td class="d-print-none"></td>
                                     </tr>
                                     <tr class="table-success">
-                                        <td class="fw-bold fs-5">TOTALE COMPLESSIVO DISPONIBILE:</td>
-                                        <td class="fw-bold text-end text-success fs-5" id="totale-disponibile-td">€ 0.00</td>
-                                        <td></td>
+                                        <td class="fw-bold fs-6">TOTALE COMPLESSIVO DISPONIBILE:</td>
+                                        <td class="fw-bold text-end text-success fs-6" id="totale-disponibile-td">€ 0.00</td>
+                                        <td class="d-print-none"></td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="addAccountRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce Conto</button>
+                        <button class="btn btn-outline-secondary btn-sm mt-2 d-print-none" onclick="addAccountRow()"><i class="fa-solid fa-plus me-1"></i>Aggiungi Voce Conto</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- SCHEDA 6: GIORNATE DI LAVORO & REGISTRO PRESENZE -->
-        <div class="tab-pane fade" id="lavoro-pane" role="tabpanel">
+        <div class="tab-pane fade show active mb-4" id="lavoro-pane" role="tabpanel">
             <div class="table-container">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                     <div>
-                        <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-calendar-days text-success me-2"></i>Giornate di Lavoro & Registro Presenze</h4>
-                        <span class="text-muted" id="lavoro-subtitle">Pianificazione presenze per l'anno selezionato</span>
+                        <h4 class="fw-bold text-dark mb-1 fs-5"><i class="fa-solid fa-calendar-days text-success me-2"></i>Giornate di Lavoro & Registro Presenze</h4>
+                        <span class="text-muted small" id="lavoro-subtitle">Pianificazione presenze per l'anno selezionato</span>
                     </div>
-                    <div class="d-flex gap-3 align-items-center mt-2 mt-md-0">
-                        <span class="badge bg-success badge-recupero"><i class="fa-solid fa-clock-rotate-left me-1"></i>Contatore Ore da Recuperare: <strong id="contatore-recupero">12</strong> ore</span>
+                    <div class="d-flex gap-3 align-items-center">
+                        <span class="badge bg-success badge-recupero"><i class="fa-solid fa-clock-rotate-left me-1"></i>Ore da Recuperare: <strong id="contatore-recupero">12</strong>h</span>
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 mb-3">
-                    <span class="badge badge-ferie p-2 border fw-bold">Ferie</span>
-                    <span class="badge badge-malattia p-2 border fw-bold">Malattia</span>
-                    <span class="badge badge-recupero-legenda p-2 border fw-bold">Recupero</span>
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <span class="badge badge-ferie p-2 border fw-bold">Ferie (Verde)</span>
+                    <span class="badge badge-malattia p-2 border fw-bold">Malattia (Arancio)</span>
+                    <span class="badge badge-recupero-legenda p-2 border fw-bold">Recupero (Grigio)</span>
                 </div>
 
-                <div class="row mb-3">
+                <div class="row mb-3 d-print-none">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Seleziona Mese da Visualizzare:</label>
-                        <select id="monthSelect" class="form-select fw-bold" onchange="renderMonthCalendar()"></select>
+                        <label class="form-label fw-bold small">Seleziona Mese:</label>
+                        <select id="monthSelect" class="form-select form-select-sm fw-bold" onchange="renderMonthCalendar()"></select>
                     </div>
                 </div>
 
@@ -399,19 +465,19 @@
                     <table class="table table-bordered table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width: 120px;">Data</th>
-                                <th style="width: 120px;">Giorno</th>
-                                <th style="width: 100px;">Ore Lav.</th>
-                                <th style="width: 180px;">Stato / Categoria</th>
-                                <th>Note / Descrizione</th>
+                                <th style="min-width: 90px;">Data</th>
+                                <th style="min-width: 90px;">Giorno</th>
+                                <th style="min-width: 80px;">Ore Lav.</th>
+                                <th style="min-width: 150px;">Stato / Categoria</th>
+                                <th style="min-width: 150px;">Note / Descrizione</th>
                             </tr>
                         </thead>
                         <tbody id="calendar-tbody"></tbody>
                         <tfoot class="table-secondary fw-bold">
                             <tr>
-                                <td colspan="2" class="text-end">TOTALE ORE LAVORATE MESE:</td>
-                                <td class="text-center fs-5 text-primary" id="tot-ore-mese">0</td>
-                                <td colspan="2" id="sommario-mese-note"></td>
+                                <td colspan="2" class="text-end">TOTALE ORE MESE:</td>
+                                <td class="text-center fs-6 text-primary" id="tot-ore-mese">0</td>
+                                <td colspan="2" id="sommario-mese-note" class="small"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -420,33 +486,33 @@
         </div>
 
         <!-- SCHEDA 7: GOOGLE DRIVE & CLOUD SYNC -->
-        <div class="tab-pane fade" id="cloud-pane" role="tabpanel">
-            <div class="table-container max-w-2xl">
-                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cloud text-success me-2"></i>Sincronizzazione Google Drive</h4>
-                <p class="text-sm text-slate-600">Accedi con il tuo account Google per sincronizzare tutti i dati dell'app (spese, preventivi, domotica, presenze) su tutti i tuoi dispositivi in modo sicuro e privato (`appDataFolder`).</p>
+        <div class="tab-pane fade show active mb-4 d-print-none" id="cloud-pane" role="tabpanel">
+            <div class="table-container" style="max-width: 600px; margin: 0 auto;">
+                <h4 class="fw-bold text-dark mb-3 fs-5"><i class="fa-solid fa-cloud text-success me-2"></i>Sincronizzazione Google Drive</h4>
+                <p class="small text-muted">Accedi con il tuo account Google per sincronizzare tutti i dati dell'app (spese, preventivi, domotica, presenze) su tutti i tuoi dispositivi in modo sicuro e privato (`appDataFolder`).</p>
                 
                 <div id="configFields" class="mb-3">
-                    <div id="configNotice" class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900 mb-2"><b>Configurazione necessaria:</b> inserisci il Client ID OAuth creato nel progetto Google Cloud, poi premi Salva configurazione e Accedi.</div>
-                    <label class="form-label fw-semibold">Google OAuth Client ID</label>
-                    <input id="clientId" autocomplete="off" placeholder="123456789-abc....apps.googleusercontent.com" class="form-control mb-2">
-                    <button type="button" onclick="saveGoogleConfig()" class="btn btn-dark btn-sm">Salva configurazione</button>
+                    <div id="configNotice" class="alert alert-warning p-2 small mb-2"><b>Configurazione necessaria:</b> inserisci il Client ID OAuth creato nel progetto Google Cloud, poi premi Salva configurazione e Accedi.</div>
+                    <label class="form-label fw-semibold small">Google OAuth Client ID</label>
+                    <input id="clientId" autocomplete="off" placeholder="123456789-abc....apps.googleusercontent.com" class="form-control form-control-sm mb-2">
+                    <button type="button" onclick="saveGoogleConfig()" class="btn btn-dark btn-sm w-100">Salva configurazione</button>
                 </div>
-                <div id="configSaved" class="hide rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 mb-3">Client ID configurato in questo dispositivo.</div>
+                <div id="configSaved" class="hide alert alert-success p-2 small mb-3">Client ID configurato in questo dispositivo.</div>
                 
                 <div class="d-flex flex-wrap gap-2 mb-3">
-                    <button type="button" onclick="editGoogleConfig()" id="editConfigBtn" class="hide btn btn-outline-secondary btn-sm">Modifica Client ID</button>
+                    <button type="button" onclick="editGoogleConfig()" id="editConfigBtn" class="hide btn btn-outline-secondary btn-sm w-100">Modifica Client ID</button>
                 </div>
 
-                <p id="googleStatus" role="status" class="text-sm text-slate-600 fw-bold mb-3">Non collegato a Google Drive.</p>
+                <p id="googleStatus" role="status" class="small text-muted fw-bold mb-3">Non collegato a Google Drive.</p>
                 
                 <div class="row g-2 mb-3">
-                    <div class="col-sm-6"><button onclick="driveBackup()" class="btn btn-success w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Backup su Drive</button></div>
-                    <div class="col-sm-6"><button onclick="driveRestore()" class="btn btn-outline-success w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-down me-1"></i>Ripristina da Drive</button></div>
+                    <div class="col-6"><button onclick="driveBackup()" class="btn btn-success btn-sm w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Backup su Drive</button></div>
+                    <div class="col-6"><button onclick="driveRestore()" class="btn btn-outline-success btn-sm w-100 fw-semibold"><i class="fa-solid fa-cloud-arrow-down me-1"></i>Ripristina</button></div>
                 </div>
                 
                 <div class="form-check mb-3">
                     <input id="autoSync" type="checkbox" checked class="form-check-input" onchange="saveAutoSync()">
-                    <label class="form-check-label text-sm text-slate-600" for="autoSync">Sincronizza automaticamente ogni 5 secondi mentre l'app è aperta.</label>
+                    <label class="form-check-label small text-muted" for="autoSync">Sincronizza automaticamente ogni 5 secondi mentre l'app è aperta.</label>
                 </div>
             </div>
         </div>
@@ -457,18 +523,18 @@
 
 <!-- MODALI -->
 <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i>Aggiungi Spesa Progetto</h5>
+                <h5 class="modal-title fs-6"><i class="fa-solid fa-plus me-2"></i>Aggiungi Spesa Progetto</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="expenseForm">
-                    <div class="mb-3"><label class="form-label fw-bold">Data Spesa</label><input type="date" id="expDate" class="form-control" required></div>
-                    <div class="mb-3"><label class="form-label fw-bold">Tipo Spesa / Descrizione</label><input type="text" id="expType" class="form-control" placeholder="Es. Busta paga ottobre, Contributi..." required></div>
-                    <div class="mb-3"><label class="form-label fw-bold">Importo (€)</label><input type="number" step="0.01" id="expAmount" class="form-control" placeholder="0.00" required></div>
-                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-save me-1"></i>Salva Spesa</button>
+                    <div class="mb-3"><label class="form-label fw-bold small">Data Spesa</label><input type="date" id="expDate" class="form-control form-control-sm" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Tipo Spesa / Descrizione</label><input type="text" id="expType" class="form-control form-control-sm" placeholder="Es. Busta paga ottobre, Contributi..." required></div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Importo (€)</label><input type="number" step="0.01" id="expAmount" class="form-control form-control-sm" placeholder="0.00" required></div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold"><i class="fa-solid fa-save me-1"></i>Salva Spesa</button>
                 </form>
             </div>
         </div>
@@ -476,18 +542,18 @@
 </div>
 
 <div class="modal fade" id="addPreventivoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fa-solid fa-plus me-2"></i>Aggiungi Voce Preventivo/Reale</h5>
+                <h5 class="modal-title fs-6"><i class="fa-solid fa-plus me-2"></i>Aggiungi Voce Preventivo/Reale</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="preventivoForm">
-                    <div class="mb-3"><label class="form-label fw-bold">Descrizione Voce</label><input type="text" id="prevDesc" class="form-control" placeholder="Es. Monitor, Consulenza..." required></div>
-                    <div class="mb-3"><label class="form-label fw-bold">Importo Preventivo (€)</label><input type="number" step="0.01" id="prevAmount" class="form-control" placeholder="0.00" required></div>
-                    <div class="mb-3"><label class="form-label fw-bold">Spesa Reale (€)</label><input type="number" step="0.01" id="prevRealAmount" class="form-control" placeholder="0.00" required></div>
-                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-save me-1"></i>Salva Voce</button>
+                    <div class="mb-3"><label class="form-label fw-bold small">Descrizione Voce</label><input type="text" id="prevDesc" class="form-control form-control-sm" placeholder="Es. Monitor, Consulenza..." required></div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Importo Preventivo (€)</label><input type="number" step="0.01" id="prevAmount" class="form-control form-control-sm" placeholder="0.00" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Spesa Reale (€)</label><input type="number" step="0.01" id="prevRealAmount" class="form-control form-control-sm" placeholder="0.00" required></div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold"><i class="fa-solid fa-save me-1"></i>Salva Voce</button>
                 </form>
             </div>
         </div>
@@ -617,6 +683,45 @@
         renderMonthCalendar();
     }
 
+    // --- ESPORTAZIONE PDF E EXCEL AFFIDABILI ---
+
+    function exportToPDF() {
+        // Apre la finestra di stampa nativa del browser ottimizzata per salvare l'intero report in PDF
+        window.print();
+    }
+
+    function exportToExcel() {
+        let d = getActiveData();
+        let wb = XLSX.utils.book_new();
+
+        let speseData = d.spese.map((s, i) => ({ "#": i + 1, "Data": s.date, "Tipo / Descrizione": s.type, "Importo (€)": s.amount }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(speseData), "Spese");
+
+        let prevData = d.preventivi.map(p => ({ "Descrizione": p.desc, "Preventivo (€)": p.prev, "Spesa Reale (€)": p.real }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prevData), "Preventivi");
+
+        let domData = d.domoticaItems.map(item => ({ "Opzione / Smart Oggetto": item.name, "Costo (€)": item.amount }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(domData), "Domotica");
+
+        let p1Data = d.prospetto1.map(item => ({ "Voce": item.desc, "%": item.perc, "Preventivo (€)": d.budgetIniziale * (item.perc/100), "Reale (€)": item.real }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(p1Data), "Prospetto 1");
+
+        let p16Data = d.prospetto16.map(item => ({ "Voce": item.desc, "%": item.perc, "Preventivo (€)": d.budgetIniziale * (item.perc/100), "Reale (€)": item.real }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(p16Data), "Prospetto 16 Ore");
+
+        let contiData = d.contiBancari.map(c => ({ "Nome Conto": c.name, "Importo (€)": c.amount }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(contiData), "Conti");
+
+        let calData = [];
+        Object.keys(d.calendarData).forEach(dateStr => {
+            let item = d.calendarData[dateStr];
+            calData.push({ "Data": dateStr, "Ore Lavorate": item.hours, "Stato": item.status, "Note": item.note || "" });
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(calData), "Registro Lavoro");
+
+        XLSX.writeFile(wb, `PROVI_Tutte_Le_Schede_${currentYearKey}.xlsx`);
+    }
+
     // --- PERSISTENZA E LOCAL STORAGE ---
     function persistData() {
         let stateObj = { format: "provi-multi-year", version: 2, allYearsData };
@@ -633,7 +738,6 @@
                 let parsed = JSON.parse(raw);
                 if(parsed.allYearsData) allYearsData = parsed.allYearsData;
             } else {
-                // Backward compatibility with older single-year state
                 let oldRaw = localStorage.getItem("provi_app_state");
                 if(oldRaw) {
                     let d = JSON.parse(oldRaw);
@@ -681,7 +785,6 @@
                 if(d.allYearsData) {
                     allYearsData = d.allYearsData;
                 } else if(d.spese) {
-                    // Single year backup format
                     allYearsData[currentYearKey] = {
                         budgetIniziale: 15000.00,
                         domoticaFinanziato: 4400.00,
@@ -987,7 +1090,7 @@
                     <td>${item.date}</td>
                     <td>${item.type}</td>
                     <td class="text-end fw-bold">€ ${item.amount.toFixed(2)}</td>
-                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="text-center d-print-none"><button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${item.id})"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
         });
 
@@ -1040,7 +1143,7 @@
                     <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.desc}" onchange="getActiveData().preventivi[${index}].desc = this.value; renderPreventivi();"></td>
                     <td><input type="number" step="0.01" class="form-control form-control-sm text-end" value="${item.prev.toFixed(2)}" onchange="getActiveData().preventivi[${index}].prev = parseFloat(this.value)||0; renderPreventivi();"></td>
                     <td class="text-end fw-bold ${item.isContract ? 'text-primary' : ''}"><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.real.toFixed(2)}" ${item.isContract ? 'readonly' : ''} onchange="getActiveData().preventivi[${index}].real = parseFloat(this.value)||0; renderPreventivi();"></td>
-                    <td class="text-center">${!item.isContract ? `<button class="btn btn-sm btn-outline-danger" onclick="deletePreventivo(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
+                    <td class="text-center d-print-none">${!item.isContract ? `<button class="btn btn-sm btn-outline-danger" onclick="deletePreventivo(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
                 </tr>`;
         });
 
@@ -1081,7 +1184,7 @@
                 <tr>
                     <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().domoticaItems[${index}].name = this.value; renderDomotica();"></td>
                     <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().domoticaItems[${index}].amount = parseFloat(this.value)||0; renderDomotica();"></td>
-                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="deleteDomoticaRow(${index})"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="text-center d-print-none"><button class="btn btn-sm btn-outline-danger" onclick="deleteDomoticaRow(${index})"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
         });
 
@@ -1156,7 +1259,7 @@
                 <tr>
                     <td><input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold" value="${item.name}" onchange="getActiveData().contiBancari[${index}].name = this.value; renderConti();"></td>
                     <td><input type="number" step="0.01" class="form-control form-control-sm text-end fw-bold" value="${item.amount.toFixed(2)}" onchange="getActiveData().contiBancari[${index}].amount = parseFloat(this.value)||0; renderConti();"></td>
-                    <td class="text-center">${!item.isContoAle ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${index})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
+                    <td class="text-center d-print-none">${!item.isContoAle ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${index})"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
                 </tr>`;
         });
 
@@ -1218,6 +1321,7 @@
             if (current.status === "ferie") ferieMese++;
             if (current.status === "malattia") malattiaMese++;
 
+            /* CLASSI COLORE PER RIGHE GIORNATE */
             let rowClass = current.status === "ferie" ? "bg-ferie" : current.status === "malattia" ? "bg-malattia" : current.status === "recupero" ? "bg-recupero" : "";
 
             tbody.innerHTML += `
@@ -1245,7 +1349,7 @@
 
     function dayObjIsDefaultWorkDay(dateObj) {
         let day = dateObj.getDay();
-        return day !== 0 && day !== 6; // Mon-Fri
+        return day !== 0 && day !== 6;
     }
 
     function updateCalendarCell(dateStr, key, val) {
