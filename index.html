@@ -53,18 +53,43 @@
         .badge-recupero-legenda { background-color: #e2e3e5; color: #41464b; }
         .badge-recupero { font-size: 1.1rem; padding: 8px 16px; border-radius: 8px; }
         
-        /* SCROLL ORIZZONTALE TABS SU SMARTPHONE */
-        .nav-tabs-responsive {
-            overflow-x: auto;
-            overflow-y: hidden;
-            flex-wrap: nowrap;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            border-bottom: 2px solid #dee2e6;
+        /* NAV TABS AGEVOLE SENZA SCROLL LATERALE SU SMARTPHONE */
+        .nav-tabs-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            border-bottom: none;
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
         }
-        .nav-tabs-responsive::-webkit-scrollbar { display: none; }
-        .nav-tabs-responsive .nav-item { flex: 0 0 auto; }
-        .nav-tabs .nav-link { font-size: 0.9rem; }
+        .nav-tabs-grid .nav-item {
+            flex: 1 1 calc(50% - 6px); /* 2 pulsanti per riga su mobile */
+        }
+        @media (min-width: 768px) {
+            .nav-tabs-grid .nav-item {
+                flex: 0 1 auto; /* Su PC si adatta alla lunghezza */
+            }
+        }
+        .nav-tabs-grid .nav-link {
+            font-size: 0.85rem;
+            text-align: center;
+            border-radius: 8px !important;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #334155;
+            padding: 8px 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .nav-tabs-grid .nav-link.active {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border-color: #1e293b !important;
+        }
 
         .input-finanziato { max-width: 250px; font-weight: bold; font-size: 1.1rem; }
         .hide { display: none !important; }
@@ -73,6 +98,7 @@
             .d-print-none { display: none !important; }
             body { background: white !important; }
             .table-container { box-shadow: none !important; border: 1px solid #dee2e6; break-inside: avoid; }
+            .tab-pane { display: block !important; opacity: 1 !important; visibility: visible !important; }
         }
 
         /* REATTIVITÀ SMARTPHONE OTTIMIZZATA */
@@ -127,7 +153,7 @@
 <div class="container-fluid px-2 px-md-4 mt-3">
 
     <!-- DASHBOARD KPI ADATTIVA -->
-    <div class="row g-2 g-md-3 mb-4">
+    <div class="row g-2 g-md-3 mb-3">
         <div class="col-6 col-md-3">
             <div class="card card-stat bg-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
@@ -174,36 +200,36 @@
         </div>
     </div>
 
-    <!-- SCHEDE DI NAVIGAZIONE -->
-    <ul class="nav nav-tabs nav-tabs-responsive mb-4 d-print-none" id="myTab" role="tablist">
+    <!-- SCHEDE DI NAVIGAZIONE A GRIGLIA (AGEVOLE E SENZA SCROLL LATERALE) -->
+    <ul class="nav nav-tabs nav-tabs-grid d-print-none" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold" id="spese-tab" data-bs-toggle="tab" data-bs-target="#spese-pane" type="button" role="tab"><i class="fa-solid fa-file-invoice-dollar me-1"></i>Rendicontazione Spese</button>
+            <button class="nav-link active" id="spese-tab" data-bs-toggle="tab" data-bs-target="#spese-pane" type="button" role="tab"><i class="fa-solid fa-file-invoice-dollar me-1"></i>Spese</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="preventivi-tab" data-bs-toggle="tab" data-bs-target="#preventivi-pane" type="button" role="tab"><i class="fa-solid fa-table-list me-1"></i>Preventivi & Spese Reali</button>
+            <button class="nav-link" id="preventivi-tab" data-bs-toggle="tab" data-bs-target="#preventivi-pane" type="button" role="tab"><i class="fa-solid fa-table-list me-1"></i>Preventivi</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="domotica-tab" data-bs-toggle="tab" data-bs-target="#domotica-pane" type="button" role="tab"><i class="fa-solid fa-microchip me-1"></i>Domotica & Informatica</button>
+            <button class="nav-link" id="domotica-tab" data-bs-toggle="tab" data-bs-target="#domotica-pane" type="button" role="tab"><i class="fa-solid fa-microchip me-1"></i>Domotica</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="percentuali-tab" data-bs-toggle="tab" data-bs-target="#percentuali-pane" type="button" role="tab"><i class="fa-solid fa-percent me-1"></i>Percentuali e Prospetti</button>
+            <button class="nav-link" id="percentuali-tab" data-bs-toggle="tab" data-bs-target="#percentuali-pane" type="button" role="tab"><i class="fa-solid fa-percent me-1"></i>Prospetti</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="conti-tab" data-bs-toggle="tab" data-bs-target="#conti-pane" type="button" role="tab"><i class="fa-solid fa-building-columns me-1"></i>Conti e Saldi Bancari</button>
+            <button class="nav-link" id="conti-tab" data-bs-toggle="tab" data-bs-target="#conti-pane" type="button" role="tab"><i class="fa-solid fa-building-columns me-1"></i>Conti</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="lavoro-tab" data-bs-toggle="tab" data-bs-target="#lavoro-pane" type="button" role="tab"><i class="fa-solid fa-calendar-days me-1"></i>Giornate di Lavoro</button>
+            <button class="nav-link" id="lavoro-tab" data-bs-toggle="tab" data-bs-target="#lavoro-pane" type="button" role="tab"><i class="fa-solid fa-calendar-days me-1"></i>Presenze</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold text-success" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-pane" type="button" role="tab"><i class="fa-solid fa-cloud me-1"></i>Google Drive & Backup</button>
+            <button class="nav-link text-success" id="cloud-tab" data-bs-toggle="tab" data-bs-target="#cloud-pane" type="button" role="tab"><i class="fa-solid fa-cloud me-1"></i>Backup Cloud</button>
         </li>
     </ul>
 
-    <!-- CONTENUTO DELLE SCHEDE (TUTTI VISIBILI PER LA STAMPA/PDF COMPLETA) -->
-    <div class="tab-content" id="allPanesExportContainer">
+    <!-- CONTENUTO DELLE SCHEDE (VISIBILE SOLO LA SCHEDA ATTIVA A SCHERMO, TUTTE VISIBILI IN STAMPA/PDF) -->
+    <div class="tab-content" id="myTabContent">
         
         <!-- SCHEDA 1: RENDICONTAZIONE SPESE -->
-        <div class="tab-pane fade show active mb-4" id="spese-pane" role="tabpanel">
+        <div class="tab-pane fade show active" id="spese-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="fw-bold text-dark mb-0 fs-5"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Rendicontazione Spese Progetto</h4>
@@ -239,7 +265,7 @@
         </div>
 
         <!-- SCHEDA 2: PREVENTIVI & SPESE REALI -->
-        <div class="tab-pane fade show active mb-4" id="preventivi-pane" role="tabpanel">
+        <div class="tab-pane fade" id="preventivi-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="fw-bold text-dark mb-0 fs-5"><i class="fa-solid fa-table-list text-primary me-2"></i>Preventivo Spese Progetto & Reale</h4>
@@ -270,7 +296,7 @@
         </div>
 
         <!-- SCHEDA 3: DOMOTICA & INFORMATICA -->
-        <div class="tab-pane fade show active mb-4" id="domotica-pane" role="tabpanel">
+        <div class="tab-pane fade" id="domotica-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
                     <div>
@@ -312,7 +338,7 @@
         </div>
 
         <!-- SCHEDA 4: PERCENTUALI E PROSPETTI -->
-        <div class="tab-pane fade show active mb-4" id="percentuali-pane" role="tabpanel">
+        <div class="tab-pane fade" id="percentuali-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
                     <div>
@@ -388,7 +414,7 @@
         </div>
 
         <!-- SCHEDA 5: CONTI E SALDI BANCARI -->
-        <div class="tab-pane fade show active mb-4" id="conti-pane" role="tabpanel">
+        <div class="tab-pane fade" id="conti-pane" role="tabpanel">
             <div class="table-container">
                 <h4 class="fw-bold text-dark mb-2 fs-5"><i class="fa-solid fa-building-columns text-secondary me-2"></i>Conti e Saldi Bancari</h4>
                 <p class="text-muted small">Il <strong>Conto Ale</strong> rappresenta il totale bancario lordo. Da esso viene sottratto automaticamente il <em>Residuo Progetto</em> per ottenere il <strong>Saldo Banca</strong> effettivo, a cui si sommano le altre voci.</p>
@@ -436,7 +462,7 @@
         </div>
 
         <!-- SCHEDA 6: GIORNATE DI LAVORO & REGISTRO PRESENZE -->
-        <div class="tab-pane fade show active mb-4" id="lavoro-pane" role="tabpanel">
+        <div class="tab-pane fade" id="lavoro-pane" role="tabpanel">
             <div class="table-container">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                     <div>
@@ -486,7 +512,7 @@
         </div>
 
         <!-- SCHEDA 7: GOOGLE DRIVE & CLOUD SYNC -->
-        <div class="tab-pane fade show active mb-4 d-print-none" id="cloud-pane" role="tabpanel">
+        <div class="tab-pane fade" id="cloud-pane" role="tabpanel">
             <div class="table-container" style="max-width: 600px; margin: 0 auto;">
                 <h4 class="fw-bold text-dark mb-3 fs-5"><i class="fa-solid fa-cloud text-success me-2"></i>Sincronizzazione Google Drive</h4>
                 <p class="small text-muted">Accedi con il tuo account Google per sincronizzare tutti i dati dell'app (spese, preventivi, domotica, presenze) su tutti i tuoi dispositivi in modo sicuro e privato (`appDataFolder`).</p>
@@ -683,10 +709,9 @@
         renderMonthCalendar();
     }
 
-    // --- ESPORTAZIONE PDF E EXCEL AFFIDABILI ---
+    // --- ESPORTAZIONE PDF E EXCEL ---
 
     function exportToPDF() {
-        // Apre la finestra di stampa nativa del browser ottimizzata per salvare l'intero report in PDF
         window.print();
     }
 
